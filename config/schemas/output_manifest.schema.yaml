@@ -1,0 +1,3 @@
+# Phase-1 placeholder schema for packaged outputs.
+# Responsibility: define the explicit output contract and provenance surface.
+# Non-responsibility in phase 1: no output file list or validation rules are defined yet.

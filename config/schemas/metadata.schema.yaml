@@ -1,0 +1,3 @@
+# Phase-1 placeholder schema for normalized metadata inputs.
+# Responsibility: define the authoritative metadata contract in later phases.
+# Non-responsibility in phase 1: no concrete schema fields are locked here yet.

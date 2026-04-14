@@ -1,0 +1,3 @@
+# Phase-1 placeholder schema for TE run configuration.
+# Responsibility: define extraction, preprocessing, compute, QC, and packaging boundaries.
+# Non-responsibility in phase 1: no algorithm parameters are set yet.
