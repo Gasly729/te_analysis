@@ -1,0 +1,271 @@
+{
+  "wrapper_name": "legacy_te_model_wrapper",
+  "spec_version": "1.0",
+  "source_of_truth": {
+    "audit_markdown": "/home/xrx/my_project/te_analysis/reports/audits/te_model_downstream_contract_audit.md",
+    "audit_json": "/home/xrx/my_project/te_analysis/reports/audits/te_model_downstream_contract_audit.json",
+    "legacy_source_root": "/home/xrx/my_project/te_analysis/raw_motheds/TE_model"
+  },
+  "input_contract": {
+    "run_id": {
+      "type": "string",
+      "regex": "^[A-Za-z0-9][A-Za-z0-9._-]{2,127}$",
+      "required": true
+    },
+    "execution_mode": {
+      "type": "enum",
+      "required": true,
+      "allowed": [
+        "legacy_default_counts",
+        "legacy_winsorized_counts"
+      ]
+    },
+    "handoff_manifest_path": {
+      "type": "absolute_json_path",
+      "required": true
+    },
+    "handoff_manifest": {
+      "manifest_version": "1.0",
+      "input_mode": "experiment_level_ribo",
+      "rna_seq_validation": {
+        "mode": "dual_validation",
+        "manifest_requirement": "every experiment record must declare has_rnaseq == true",
+        "file_inspection_requirement": "wrapper must perform read-only inspection of each .ribo file and verify RNA-seq presence for the corresponding experiment before execution",
+        "may_skip_ribo_inspection": false,
+        "validation_success_condition": "both manifest declaration and .ribo inspection are positive"
+      },
+      "required_fields": [
+        "manifest_version",
+        "run_id",
+        "input_mode",
+        "experiments"
+      ],
+      "experiment_required_fields": [
+        "experiment_alias",
+        "study_id",
+        "ribo_path",
+        "organism",
+        "has_rnaseq"
+      ]
+    }
+  },
+  "required_sidecars": {
+    "nonpolya_csv": {
+      "required": true,
+      "type": "csv",
+      "required_columns": [
+        "Gene"
+      ],
+      "optional_columns": [
+        "GENE_true",
+        "anno"
+      ]
+    },
+    "grouping_csv": {
+      "required": true,
+      "type": "csv",
+      "required_columns": [
+        "experiment_alias",
+        "cell_line"
+      ]
+    },
+    "sample_selection_csv": {
+      "required": false,
+      "type": "csv",
+      "required_columns": [
+        "experiment_alias"
+      ],
+      "notes": "Optional in v1 because the generated trial config should pass custom_experiment_list."
+    }
+  },
+  "reject_if": [
+    "handoff_manifest_path is missing or not valid JSON",
+    "manifest_version is not 1.0",
+    "manifest run_id does not match request run_id",
+    "input_mode is not experiment_level_ribo",
+    "experiments array is empty",
+    "any ribo_path does not exist",
+    "any ribo_path is not an experiment-level .ribo file",
+    "duplicate experiment_alias values exist",
+    "study_id is empty, conflicting, or ambiguous",
+    "two experiment records would materialize to the same sandbox path",
+    "any experiment has has_rnaseq != true",
+    "read-only inspection of any .ribo file cannot verify RNA-seq presence for the corresponding experiment",
+    "manifest has_rnaseq declaration contradicts observed .ribo contents",
+    "handoff is ribo-only for black-box TE mode",
+    "all.ribo is supplied as the sole input object without experiment-level records",
+    "nonpolya_csv is missing or lacks Gene column",
+    "grouping_csv is missing or lacks experiment_alias/cell_line columns",
+    "grouping_csv contains duplicate experiment_alias rows",
+    "grouping_csv does not cover every experiment_alias in the handoff manifest",
+    "execution_mode is not one of the frozen enum values",
+    "legacy_winsorized_counts is requested with a non-legacy custom counting policy",
+    "mixed-organism handoff is supplied",
+    "organism is outside the implementation-approved allowlist"
+  ],
+  "sandbox_layout": {
+    "runtime_root": "/home/xrx/my_project/te_analysis/data/downstream_runs/<run_id>",
+    "required_paths": [
+      "handoff/handoff_manifest.json",
+      "handoff/sidecars_manifest.json",
+      "handoff/wrapper_request.json",
+      "sandbox/pipeline.bash",
+      "sandbox/src/",
+      "sandbox/src/__init__.py",
+      "sandbox/data/ribo/<study_id>/ribo/experiments/<experiment_alias>.ribo",
+      "sandbox/data/nonpolyA_gene.csv",
+      "sandbox/data/infor_filter.csv",
+      "sandbox/trials/__init__.py",
+      "sandbox/trials/<run_id>/__init__.py",
+      "sandbox/trials/<run_id>/config.py",
+      "outputs/raw_legacy_trial_outputs/",
+      "outputs/packaged/",
+      "logs/materialization.log",
+      "logs/pipeline.stdout.log",
+      "logs/pipeline.stderr.log",
+      "logs/wrapper_provenance.json"
+    ],
+    "materialization_policy": {
+      "legacy_source_files": "may_symlink",
+      "experiment_ribo_inputs": "may_symlink",
+      "sidecars": "copy",
+      "generated_trial_outputs": "create_in_runtime_root",
+      "packaged_outputs": "copy_from_legacy_outputs"
+    },
+    "generated_trial_config_semantics": {
+      "must_set_workdir": true,
+      "must_import_from_sandbox_src": true,
+      "must_pass_custom_experiment_list": true,
+      "must_encode_execution_mode": true,
+      "must_not_introduce_new_method_logic": true
+    },
+    "module_execution_requirements": {
+      "entrypoint": "python -m trials.<run_id>.config",
+      "launch_cwd": "sandbox_root",
+      "trials_package_init_required": true,
+      "trial_package_init_required": true,
+      "src_package_init_required": true,
+      "config_import_path": "trials.<run_id>.config",
+      "top_level_under_sandbox_root": [
+        "src",
+        "trials"
+      ],
+      "external_installation_or_packaging_required": false,
+      "external_pythonpath_mutation_required": false
+    }
+  },
+  "output_layout": {
+    "raw_legacy_outputs_dir": "/home/xrx/my_project/te_analysis/data/downstream_runs/<run_id>/outputs/raw_legacy_trial_outputs",
+    "packaged_outputs_dir": "/home/xrx/my_project/te_analysis/data/downstream_runs/<run_id>/outputs/packaged",
+    "canonical_outputs": {
+      "te_sample_level_rda": "te_sample_level.rda",
+      "te_cellline_csv": "te_cellline.csv",
+      "te_cellline_transposed_csv": "te_cellline_transposed.csv",
+      "output_manifest_json": "output_manifest.json"
+    },
+    "legacy_to_packaged_mapping": {
+      "human_TE_sample_level.rda": "te_sample_level.rda",
+      "human_TE_cellline_all.csv": "te_cellline.csv",
+      "human_TE_cellline_all_T.csv": "te_cellline_transposed.csv"
+    }
+  },
+  "run_modes": {
+    "legacy_default_counts": {
+      "description": "Use original Stage 0 extraction without a custom legacy winsorization callback.",
+      "operational_rules": [
+        "No wrapper-defined preprocessing stage is allowed.",
+        "Stage 1, Stage 2, and Stage 3 remain unchanged legacy semantics."
+      ]
+    },
+    "legacy_winsorized_counts": {
+      "description": "Use original Stage 0 extraction with the exact audited process_coverage_fn callback pattern observed in trials/PAX_hela/config.py.",
+      "callback_contract": {
+        "source_evidence": [
+          "raw_motheds/TE_model/trials/PAX_hela/config.py:10-14",
+          "raw_motheds/TE_model/src/ribo_counts_to_csv.py:36-47",
+          "raw_motheds/TE_model/src/utils.py:72-80"
+        ],
+        "callable_shape": "process_coverage_fn(coverage, gene, ribo)",
+        "required_chain": [
+          "boundary_lookup = get_cds_range_lookup(ribo)",
+          "cap_outliers_cds_only(coverage, gene, boundary_lookup, 99.5)",
+          "sum()"
+        ],
+        "coverage_source": "original Stage 0 get_coverage(...) path before callback application",
+        "capping_scope": "CDS only",
+        "capping_percentile": 99.5,
+        "aggregation_order": "cap before aggregation to scalar count",
+        "must_not_vary": [
+          "must not substitute cap_outliers for cap_outliers_cds_only",
+          "must not cap after summation",
+          "must not change percentile from 99.5",
+          "must not switch to a non-CDS region",
+          "must not add wrapper-defined transforms before or after the capping-and-sum step"
+        ],
+        "fallback_behavior": "reject legacy_winsorized_counts if this exact callback chain cannot be reproduced in the generated legacy trial config"
+      },
+      "operational_rules": [
+        "Winsorization remains inside Stage 0 extraction.",
+        "No separate wrapper-side winsorization stage may be introduced.",
+        "The callback must follow the audited legacy semantics rather than define a new transform family."
+      ]
+    }
+  },
+  "legacy_constraints": {
+    "requires_experiment_level_ribo": true,
+    "requires_all_ribo": false,
+    "rna_seq_absent_allowed": false,
+    "sandbox_execution_required": true,
+    "in_place_execution_allowed": false,
+    "mixed_organism_allowed": false,
+    "default_v1_assumption": "human_only_until_further_evidence"
+  },
+  "logging_and_provenance": {
+    "required_logs": [
+      "logs/materialization.log",
+      "logs/pipeline.stdout.log",
+      "logs/pipeline.stderr.log",
+      "logs/wrapper_provenance.json"
+    ],
+    "wrapper_provenance_required_fields": [
+      "wrapper_name",
+      "spec_version",
+      "run_id",
+      "execution_mode",
+      "legacy_source_root",
+      "sandbox_root",
+      "raw_outputs_root",
+      "packaged_outputs_root",
+      "materialization_policy",
+      "sidecar_targets",
+      "timestamps"
+    ]
+  },
+  "failure_semantics": {
+    "validation_failure": {
+      "must_block_execution": true,
+      "rna_seq_failure_categories": [
+        "manifest_declaration_failure",
+        "ribo_inspection_failure",
+        "manifest_inspection_contradiction"
+      ]
+    }
+  },
+  "non_goals": [
+    "No direct in-place execution in the frozen legacy tree.",
+    "No ribo-only TE black-box mode.",
+    "No requirement that all.ribo be present by default.",
+    "No use of all.ribo as the sole required input object.",
+    "No new internal reimplementation of original Stage 0/1/2/3 logic.",
+    "No new standalone winsorization stage.",
+    "No species-generalization claims beyond audited assumptions.",
+    "No production integration wiring in this design task.",
+    "No expansion into TEC."
+  ],
+  "open_issues": [
+    "Whether v1 should be strictly human-only or use a tiny explicit allowlist.",
+    "Whether a generated paxdb_filtered_sample.csv should also be staged for observability when custom_experiment_list is already supplied.",
+    "Whether checksums are mandatory or optional in the first implementation.",
+    "Whether a machine-readable failure code taxonomy should be frozen in implementation v1."
+  ]
+}
