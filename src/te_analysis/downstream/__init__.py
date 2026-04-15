@@ -13,6 +13,7 @@ from .extraction_wrapper import (
     extract_from_handoff,
     run_extraction,
 )
+from .legacy_te_model import materialize_legacy_te_model_wrapper
 
 __all__ = [
     "DEFAULT_EXTRACTION_OUTPUT_ROOT",
@@ -22,5 +23,6 @@ __all__ = [
     "MissingRiboArtifactError",
     "RnaSeqStatus",
     "extract_from_handoff",
+    "materialize_legacy_te_model_wrapper",
     "run_extraction",
 ]

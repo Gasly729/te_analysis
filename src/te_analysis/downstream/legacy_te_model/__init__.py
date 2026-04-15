@@ -1,0 +1,35 @@
+from .contracts import (
+    DEFAULT_RUNTIME_BASE,
+    LEGACY_SOURCE_ROOT,
+    SPEC_VERSION,
+    WRAPPER_NAME,
+    ExecutionMode,
+    HandoffExperiment,
+    HandoffManifestV1,
+    LegacyTeModelContractError,
+    MaterializationResult,
+    RnaSeqValidationError,
+    WrapperRequest,
+    WrapperSidecars,
+    load_handoff_manifest,
+    load_wrapper_request,
+)
+from .materialize import materialize_legacy_te_model_wrapper
+
+__all__ = [
+    "DEFAULT_RUNTIME_BASE",
+    "LEGACY_SOURCE_ROOT",
+    "SPEC_VERSION",
+    "WRAPPER_NAME",
+    "ExecutionMode",
+    "HandoffExperiment",
+    "HandoffManifestV1",
+    "LegacyTeModelContractError",
+    "MaterializationResult",
+    "RnaSeqValidationError",
+    "WrapperRequest",
+    "WrapperSidecars",
+    "load_handoff_manifest",
+    "load_wrapper_request",
+    "materialize_legacy_te_model_wrapper",
+]

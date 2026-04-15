@@ -23,6 +23,7 @@ from te_analysis.downstream import (
     MissingRiboArtifactError,
     RnaSeqStatus,
     run_extraction,
+    materialize_legacy_te_model_wrapper,
 )
 
 
@@ -38,6 +39,7 @@ KNOWN_COMMANDS: tuple[CliCommandSpec, ...] = (
     CliCommandSpec(name="upstream", summary="Future upstream wrapper entrypoint."),
     CliCommandSpec(name="handoff", summary="Future handoff validation entrypoint."),
     CliCommandSpec(name="extract", summary="Run the minimal downstream extraction wrapper."),
+    CliCommandSpec(name="legacy-materialize", summary="Validate and materialize the non-executing legacy TE_model wrapper runtime."),
 )
 
 
@@ -65,6 +67,22 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional downstream-owned output root for extraction outputs.",
     )
     extract_parser.set_defaults(handler=_run_extract_command)
+
+    legacy_parser = subparsers.add_parser(
+        "legacy-materialize",
+        help="Validate and materialize the legacy TE_model wrapper runtime without executing legacy pipeline.",
+        description="Consume a wrapper request JSON, validate contracts, materialize sandbox runtime, and stop before legacy execution.",
+    )
+    legacy_parser.add_argument(
+        "--request",
+        required=True,
+        help="Absolute path to a wrapper request JSON file.",
+    )
+    legacy_parser.add_argument(
+        "--runtime-base",
+        help="Optional absolute runtime base override.",
+    )
+    legacy_parser.set_defaults(handler=_run_legacy_materialize_command)
     return parser
 
 
@@ -106,6 +124,22 @@ def _run_extract_command(args: argparse.Namespace) -> int:
         output_root=output_root,
     )
     print(_format_extraction_summary(result))
+    return 0
+
+
+def _run_legacy_materialize_command(args: argparse.Namespace) -> int:
+    """Validate and materialize the legacy TE_model wrapper runtime without execution."""
+
+    runtime_base = None if args.runtime_base is None else Path(args.runtime_base)
+    result = materialize_legacy_te_model_wrapper(
+        args.request,
+        runtime_base=runtime_base,
+    )
+    print("legacy_te_model_wrapper: materialized, not executed")
+    print("run_id: {run_id}".format(run_id=result.run_id))
+    print("runtime_root: {runtime_root}".format(runtime_root=result.runtime_root))
+    print("sandbox_root: {sandbox_root}".format(sandbox_root=result.sandbox_root))
+    print("generated_config: {config_path}".format(config_path=result.generated_config_path))
     return 0
 
 
