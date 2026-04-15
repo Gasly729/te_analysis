@@ -1,0 +1,16 @@
+backend_name: snakescale
+reference_backend_root: /home/xrx/my_project/te_analysis/raw_motheds/snakescale
+method_boundary: upstream
+download_enabled: false
+
+input_contract:
+  mode: local_staged_fastq
+  staged_fastq_root: /home/xrx/my_project/te_analysis/data/raw/fastq
+
+wrapper_role:
+  local_package: src/te_analysis/upstream
+  responsibility: orchestrate_local_fastq_to_riboflow_parameters
+
+outputs:
+  resolved_run_manifest: required
+  riboflow_params: required

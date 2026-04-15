@@ -1,0 +1,17 @@
+mode_name: local_staged_fastq
+input_mode: local_staged_fastq
+download_enabled: false
+
+paths:
+  raw_container_root: /home/xrx/my_project/te_analysis/data/raw
+  staged_fastq_root: /home/xrx/my_project/te_analysis/data/raw/fastq
+
+validation:
+  on_missing_fastq: fail
+  allow_network_fallback: false
+  path_policy: explicit_local_root_only
+
+contract:
+  acquisition_boundary: external
+  staging_boundary: local
+  consumption_boundary: pipeline_only

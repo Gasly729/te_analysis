@@ -1,0 +1,35 @@
+stage_name: winsorization
+method_boundary: downstream
+status: explicit_stage_documented_not_migrated
+
+reference_backend_root: /home/xrx/my_project/te_analysis/raw_motheds/TE_model
+reference_entrypoints:
+  - src/ribo_counts_to_csv.py
+  - src/utils.py
+  - trials/PAX_hela/config.py
+
+execution_order:
+  after: extraction
+  before: filtering
+
+method_parameters:
+  percentile: 99.5
+  region_scope: CDS_only
+  count_source: non_deduplicated_coverage
+  interval_selection: sample_specific_rpf_interval
+
+input_contract:
+  source_of_truth: experiment_level_ribo_collection
+  object_origin: extraction_derived_coverage_object
+  granularity: per_gene_CDS_coverage_semantics
+
+output_contract:
+  artifact: winsorized_gene_level_ribo_counts
+  upstream_artifacts_modified: false
+  summary_report_required: true
+
+semantics:
+  preserve_original_method_behavior: true
+  implementation_location_in_reference: downstream_stage0_extraction_flow
+  local_wrapper_interpretation: explicit_stage_wrapper_of_original_extraction_time_hook
+  disallowed_interpretation: generic_late_stage_normalization_over_finalized_raw_csv_tables

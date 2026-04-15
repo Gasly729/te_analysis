@@ -1,0 +1,23 @@
+pipeline_name: te_analysis_te_only
+
+method_shape:
+  upstream_backend: SnakeScale_and_RiboFlow
+  downstream_backend: TE_model
+
+stage_sequence:
+  - upstream.local_staged_fastq
+  - upstream.ribo_build
+  - handoff.experiment_ribo_collection
+  - downstream.extraction
+  - downstream.winsorization
+  - downstream.filtering
+  - downstream.te_compute
+  - downstream.result_packaging
+
+handoff:
+  main_object: experiment_level_ribo_files
+  all_ribo_role: optional_aggregate_only
+
+downstream:
+  winsorization_stage_explicit: true
+  te_math_backend: preserved_reference_backend
