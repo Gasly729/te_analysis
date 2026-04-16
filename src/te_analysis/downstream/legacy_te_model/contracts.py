@@ -194,6 +194,44 @@ class MaterializationResult:
         }
 
 
+@dataclass(frozen=True)
+class ExecutionReadinessResult:
+    wrapper_name: str
+    spec_version: str
+    run_id: str
+    runtime_root: Path
+    sandbox_root: Path
+    generated_config_path: Path
+    readiness_report_path: Path
+    readiness_log_path: Path
+    pipeline_stdout_log_path: Path
+    pipeline_stderr_log_path: Path
+    checked_at: str
+    next_stage0_command: str
+    ready_for_stage0_isolated_smoke: bool
+    blocking_issues: tuple[str, ...]
+    status: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "wrapper_name": self.wrapper_name,
+            "spec_version": self.spec_version,
+            "run_id": self.run_id,
+            "runtime_root": str(self.runtime_root),
+            "sandbox_root": str(self.sandbox_root),
+            "generated_config_path": str(self.generated_config_path),
+            "readiness_report_path": str(self.readiness_report_path),
+            "readiness_log_path": str(self.readiness_log_path),
+            "pipeline_stdout_log_path": str(self.pipeline_stdout_log_path),
+            "pipeline_stderr_log_path": str(self.pipeline_stderr_log_path),
+            "checked_at": self.checked_at,
+            "next_stage0_command": self.next_stage0_command,
+            "ready_for_stage0_isolated_smoke": self.ready_for_stage0_isolated_smoke,
+            "blocking_issues": list(self.blocking_issues),
+            "status": self.status,
+        }
+
+
 def load_wrapper_request(path: Path | str) -> WrapperRequest:
     request_path = Path(path)
     return WrapperRequest.from_dict(json.loads(request_path.read_text()))

@@ -29,6 +29,12 @@ def _write_text(path: Path, content: str) -> None:
     path.write_text(content)
 
 
+def _touch(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text("")
+
+
 def _safe_symlink(source: Path, target: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() or target.is_symlink():
@@ -41,6 +47,33 @@ def _copy_file(source: Path, target: Path) -> None:
     shutil.copy2(source, target)
 
 
+def _write_legacy_src_init(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(
+            (
+                "import functools",
+                "import sys",
+                "import types",
+                "from functools import lru_cache",
+                "",
+                "# Support legacy imports under Python runtimes that lack functools.cache.",
+                "if not hasattr(functools, \"cache\"):",
+                "    functools.cache = lambda user_function: lru_cache(maxsize=None)(user_function)",
+                "",
+                "# tqdm only provides progress reporting in Stage 0; fall back to a no-op shim when absent.",
+                "try:",
+                "    import tqdm as _tqdm  # noqa: F401",
+                "except ImportError:",
+                "    fake_tqdm = types.ModuleType(\"tqdm\")",
+                "    fake_tqdm.tqdm = lambda iterable, *args, **kwargs: iterable",
+                "    sys.modules[\"tqdm\"] = fake_tqdm",
+                "",
+            )
+        )
+    )
+
+
 def _ensure_init(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
@@ -51,7 +84,7 @@ def _materialize_legacy_source(sandbox_root: Path, source_legacy_root: Path) -> 
     _safe_symlink(source_legacy_root / "pipeline.bash", sandbox_root / "pipeline.bash")
     src_root = sandbox_root / "src"
     src_root.mkdir(parents=True, exist_ok=True)
-    _ensure_init(src_root / "__init__.py")
+    _write_legacy_src_init(src_root / "__init__.py")
     for filename in ("Fasta.py", "ribo_counts_to_csv.py", "ribobase_counts_processing.py", "transpose_TE.py", "utils.py", "TE.R"):
         _safe_symlink(source_legacy_root / "src" / filename, src_root / filename)
 
@@ -126,6 +159,9 @@ def _build_provenance_payload(
     runtime_root: Path,
     sandbox_root: Path,
     copied_targets: dict[str, str],
+    config_path: Path,
+    pipeline_stdout_log_path: Path,
+    pipeline_stderr_log_path: Path,
 ) -> dict:
     timestamp = datetime.now(timezone.utc).isoformat()
     return {
@@ -143,7 +179,12 @@ def _build_provenance_payload(
             "sidecars": "copy",
             "generated_files": "create_in_runtime_root",
         },
+        "generated_config_path": str(config_path),
         "sidecar_targets": copied_targets,
+        "log_targets": {
+            "pipeline_stdout_log": str(pipeline_stdout_log_path),
+            "pipeline_stderr_log": str(pipeline_stderr_log_path),
+        },
         "timestamps": {
             "materialized_at": timestamp,
         },
@@ -181,6 +222,11 @@ def materialize_legacy_te_model_wrapper(
     wrapper_request_path = handoff_root / "wrapper_request.json"
     provenance_path = logs_root / "wrapper_provenance.json"
     materialization_log_path = logs_root / "materialization.log"
+    pipeline_stdout_log_path = logs_root / "pipeline.stdout.log"
+    pipeline_stderr_log_path = logs_root / "pipeline.stderr.log"
+
+    _touch(pipeline_stdout_log_path)
+    _touch(pipeline_stderr_log_path)
 
     _write_json(handoff_manifest_copy, manifest.as_dict())
     _write_json(sidecars_manifest_path, _build_sidecars_manifest(request, copied_targets))
@@ -192,6 +238,9 @@ def materialize_legacy_te_model_wrapper(
             runtime_root=runtime_root,
             sandbox_root=sandbox_root,
             copied_targets=copied_targets,
+            config_path=config_path,
+            pipeline_stdout_log_path=pipeline_stdout_log_path,
+            pipeline_stderr_log_path=pipeline_stderr_log_path,
         ),
     )
     _write_text(

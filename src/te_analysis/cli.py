@@ -22,8 +22,9 @@ from te_analysis.downstream import (
     ExtractionRunResult,
     MissingRiboArtifactError,
     RnaSeqStatus,
-    run_extraction,
     materialize_legacy_te_model_wrapper,
+    prepare_legacy_te_model_isolated_smoke,
+    run_extraction,
 )
 
 
@@ -40,6 +41,7 @@ KNOWN_COMMANDS: tuple[CliCommandSpec, ...] = (
     CliCommandSpec(name="handoff", summary="Future handoff validation entrypoint."),
     CliCommandSpec(name="extract", summary="Run the minimal downstream extraction wrapper."),
     CliCommandSpec(name="legacy-materialize", summary="Validate and materialize the non-executing legacy TE_model wrapper runtime."),
+    CliCommandSpec(name="legacy-readiness", summary="Probe a materialized legacy TE_model runtime for isolated Stage 0 smoke readiness."),
 )
 
 
@@ -83,6 +85,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional absolute runtime base override.",
     )
     legacy_parser.set_defaults(handler=_run_legacy_materialize_command)
+
+    readiness_parser = subparsers.add_parser(
+        "legacy-readiness",
+        help="Probe a materialized legacy TE_model runtime for isolated Stage 0 smoke readiness.",
+        description="Use a non-executing readiness probe to verify sandbox structure, config import, and cwd-relative assumptions before running legacy Stage 0.",
+    )
+    readiness_parser.add_argument(
+        "--runtime-root",
+        required=True,
+        help="Absolute path to an already materialized runtime root.",
+    )
+    readiness_parser.set_defaults(handler=_run_legacy_readiness_command)
     return parser
 
 
@@ -143,6 +157,25 @@ def _run_legacy_materialize_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_legacy_readiness_command(args: argparse.Namespace) -> int:
+    """Probe a materialized legacy runtime for isolated Stage 0 smoke readiness."""
+
+    result = prepare_legacy_te_model_isolated_smoke(Path(args.runtime_root))
+    print("legacy_te_model_wrapper: readiness probe complete")
+    print("run_id: {run_id}".format(run_id=result.run_id))
+    print("status: {status}".format(status=result.status))
+    print("sandbox_root: {sandbox_root}".format(sandbox_root=result.sandbox_root))
+    print("launch_cwd: {sandbox_root}".format(sandbox_root=result.sandbox_root))
+    print("next_stage0_command: {command}".format(command=result.next_stage0_command))
+    print("readiness_report: {path}".format(path=result.readiness_report_path))
+    if result.blocking_issues:
+        print("blocking_issues:")
+        for issue in result.blocking_issues:
+            print("- {issue}".format(issue=issue))
+        return 1
+    return 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the te_analysis CLI and return a process exit code."""
 
@@ -157,7 +190,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         return int(handler(args))
     except (ExtractionContractError, MissingRiboArtifactError, FileNotFoundError, ValueError) as exc:
-        print("downstream_extraction: error", file=sys.stderr)
+        print("te_analysis: error", file=sys.stderr)
         print(str(exc), file=sys.stderr)
         return 1
 

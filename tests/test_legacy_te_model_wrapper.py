@@ -12,11 +12,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from te_analysis.downstream.legacy_te_model import (
+    ExecutionReadinessResult,
     LEGACY_SOURCE_ROOT,
     ExecutionMode,
     MaterializationResult,
     RnaSeqValidationError,
     materialize_legacy_te_model_wrapper,
+    prepare_legacy_te_model_isolated_smoke,
 )
 from te_analysis.downstream.legacy_te_model.contracts import WrapperRequest
 from te_analysis.downstream.legacy_te_model.validator import validate_request_and_manifest
@@ -98,6 +100,35 @@ def _install_fake_ribopy(*, has_rnaseq: bool) -> None:
         alias=types.SimpleNamespace(apris_human_alias=lambda gene_id: gene_id)
     )
     sys.modules["ribopy"] = fake_ribopy
+
+
+def _install_fake_legacy_import_deps(*, has_rnaseq: bool) -> None:
+    _install_fake_ribopy(has_rnaseq=has_rnaseq)
+    sys.modules["numpy"] = types.ModuleType("numpy")
+    sys.modules["pandas"] = types.ModuleType("pandas")
+    fake_tqdm = types.ModuleType("tqdm")
+    fake_tqdm.tqdm = lambda iterable, *args, **kwargs: iterable
+    sys.modules["tqdm"] = fake_tqdm
+
+    fake_get_gadgets = types.ModuleType("ribopy.core.get_gadgets")
+    fake_get_gadgets.get_region_boundaries = lambda handle: []
+    fake_get_gadgets.get_reference_names = lambda handle: []
+    fake_ribopy_core = types.ModuleType("ribopy.core")
+    fake_ribopy_core.get_gadgets = fake_get_gadgets
+    sys.modules["ribopy.core"] = fake_ribopy_core
+    sys.modules["ribopy.core.get_gadgets"] = fake_get_gadgets
+
+
+def _clear_fake_legacy_import_deps() -> None:
+    for module_name in (
+        "numpy",
+        "pandas",
+        "tqdm",
+        "ribopy",
+        "ribopy.core",
+        "ribopy.core.get_gadgets",
+    ):
+        sys.modules.pop(module_name, None)
 
 
 def test_reject_rnaseq_absent_manifest_entry() -> None:
@@ -206,12 +237,18 @@ def test_materialize_expected_sandbox_tree_and_config_import_path() -> None:
             assert (runtime_root / "handoff" / "wrapper_request.json").exists()
             assert (runtime_root / "logs" / "wrapper_provenance.json").exists()
             assert (runtime_root / "logs" / "materialization.log").exists()
+            assert (runtime_root / "logs" / "pipeline.stdout.log").exists()
+            assert (runtime_root / "logs" / "pipeline.stderr.log").exists()
             assert (runtime_root / "sandbox" / "pipeline.bash").exists()
             assert (runtime_root / "sandbox" / "src" / "__init__.py").exists()
             assert (runtime_root / "sandbox" / "trials" / "__init__.py").exists()
             assert (runtime_root / "sandbox" / "trials" / "run_ok" / "__init__.py").exists()
             config_path = runtime_root / "sandbox" / "trials" / "run_ok" / "config.py"
             assert config_path.exists()
+            provenance = json.loads((runtime_root / "logs" / "wrapper_provenance.json").read_text())
+            assert provenance["generated_config_path"] == str(config_path)
+            assert provenance["log_targets"]["pipeline_stdout_log"] == str(runtime_root / "logs" / "pipeline.stdout.log")
+            assert provenance["log_targets"]["pipeline_stderr_log"] == str(runtime_root / "logs" / "pipeline.stderr.log")
             fake_src = types.ModuleType("src")
             fake_src.__path__ = []
             fake_ribo_counts_to_csv = types.ModuleType("src.ribo_counts_to_csv")
@@ -239,6 +276,60 @@ def test_materialize_expected_sandbox_tree_and_config_import_path() -> None:
                 sys.modules.pop("trials.run_ok.config", None)
         finally:
             sys.modules.pop("ribopy", None)
+
+
+def test_prepare_isolated_smoke_readiness_updates_logs_and_provenance() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_root = Path(tmpdir)
+        request_path, _ = _make_valid_fixture(tmp_root, has_rnaseq=True)
+        _install_fake_legacy_import_deps(has_rnaseq=True)
+        try:
+            materialized = materialize_legacy_te_model_wrapper(request_path, runtime_base=tmp_root / "runtime")
+            readiness = prepare_legacy_te_model_isolated_smoke(materialized.runtime_root)
+
+            assert isinstance(readiness, ExecutionReadinessResult)
+            assert readiness.ready_for_stage0_isolated_smoke is True
+            assert readiness.status == "ready_for_stage0_isolated_smoke"
+            assert readiness.next_stage0_command == "python -m trials.run_ok.config"
+            assert readiness.readiness_report_path.exists()
+            assert readiness.readiness_log_path.exists()
+
+            report = json.loads(readiness.readiness_report_path.read_text())
+            assert report["status"] == "ready_for_stage0_isolated_smoke"
+            assert report["next_minimal_validation_action"]["launch_cwd"] == str(materialized.sandbox_root)
+            assert report["next_minimal_validation_action"]["command"] == "python -m trials.run_ok.config"
+
+            provenance = json.loads(materialized.provenance_path.read_text())
+            assert provenance["generated_config_path"] == str(materialized.generated_config_path)
+            assert provenance["readiness_probe"]["status"] == "ready_for_stage0_isolated_smoke"
+            assert provenance["readiness_probe"]["next_stage0_command"] == "python -m trials.run_ok.config"
+            assert provenance["log_targets"]["isolated_smoke_readiness_report"] == str(readiness.readiness_report_path)
+            assert provenance["log_targets"]["isolated_smoke_readiness_log"] == str(readiness.readiness_log_path)
+            assert provenance["status"] == "materialized_not_executed"
+        finally:
+            _clear_fake_legacy_import_deps()
+
+
+def test_prepare_isolated_smoke_readiness_reports_missing_stage0_backend() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_root = Path(tmpdir)
+        request_path, _ = _make_valid_fixture(tmp_root, has_rnaseq=True)
+        _install_fake_legacy_import_deps(has_rnaseq=True)
+        try:
+            materialized = materialize_legacy_te_model_wrapper(request_path, runtime_base=tmp_root / "runtime")
+            (materialized.sandbox_root / "src" / "ribo_counts_to_csv.py").unlink()
+
+            readiness = prepare_legacy_te_model_isolated_smoke(materialized.runtime_root)
+
+            assert readiness.ready_for_stage0_isolated_smoke is False
+            assert readiness.status == "not_ready_for_stage0_isolated_smoke"
+            assert any("stage0_entrypoint" in issue or "ribo_counts_to_csv.py" in issue for issue in readiness.blocking_issues)
+
+            report = json.loads(readiness.readiness_report_path.read_text())
+            assert report["status"] == "not_ready_for_stage0_isolated_smoke"
+            assert report["blocking_issues"]
+        finally:
+            _clear_fake_legacy_import_deps()
 
 
 def test_winsorized_mode_config_contains_frozen_callback_chain() -> None:
