@@ -89,10 +89,23 @@ def _materialize_legacy_source(sandbox_root: Path, source_legacy_root: Path) -> 
         _safe_symlink(source_legacy_root / "src" / filename, src_root / filename)
 
 
+def _iter_legacy_study_layouts(study_id: str) -> tuple[str, str]:
+    return (study_id, f"{study_id}_dedup")
+
+
 def _materialize_experiment_ribos(sandbox_root: Path, manifest: HandoffManifestV1) -> None:
     for experiment in manifest.experiments:
-        target = sandbox_root / "data" / "ribo" / experiment.study_id / "ribo" / "experiments" / f"{experiment.experiment_alias}.ribo"
-        _safe_symlink(experiment.ribo_path, target)
+        for legacy_study_id in _iter_legacy_study_layouts(experiment.study_id):
+            target = (
+                sandbox_root
+                / "data"
+                / "ribo"
+                / legacy_study_id
+                / "ribo"
+                / "experiments"
+                / f"{experiment.experiment_alias}.ribo"
+            )
+            _safe_symlink(experiment.ribo_path, target)
 
 
 def _materialize_sidecars(sandbox_root: Path, request: WrapperRequest) -> dict[str, str]:
@@ -176,6 +189,7 @@ def _build_provenance_payload(
         "materialization_policy": {
             "legacy_source_files": "symlink",
             "experiment_ribo_inputs": "symlink",
+            "legacy_study_layout_aliases": "materialize both canonical and _dedup study trees",
             "sidecars": "copy",
             "generated_files": "create_in_runtime_root",
         },

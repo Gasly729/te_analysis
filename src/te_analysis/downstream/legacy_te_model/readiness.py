@@ -80,6 +80,10 @@ def _check_exists(label: str, path: Path, issues: list[str]) -> dict[str, Any]:
     }
 
 
+def _iter_legacy_study_layouts(study_id: str) -> tuple[str, str]:
+    return (study_id, f"{study_id}_dedup")
+
+
 def _collect_required_paths(
     *,
     runtime_root: Path,
@@ -124,27 +128,33 @@ def _collect_required_paths(
 
     if manifest is not None:
         for experiment in manifest.experiments:
-            sandbox_path = (
-                sandbox_root
-                / "data"
-                / "ribo"
-                / experiment.study_id
-                / "ribo"
-                / "experiments"
-                / f"{experiment.experiment_alias}.ribo"
-            )
-            check = _check_exists(f"experiment_ribo::{experiment.experiment_alias}", sandbox_path, issues)
-            if check["exists"]:
-                resolved_source = str(sandbox_path.resolve())
-                expected_source = str(experiment.ribo_path.resolve())
-                check["resolved_source"] = resolved_source
-                check["expected_source"] = expected_source
-                if resolved_source != expected_source:
-                    issues.append(
-                        "Sandbox ribo staging points at an unexpected source for "
-                        f"{experiment.experiment_alias}: {resolved_source} != {expected_source}"
-                    )
-            checks.append(check)
+            for legacy_study_id in _iter_legacy_study_layouts(experiment.study_id):
+                sandbox_path = (
+                    sandbox_root
+                    / "data"
+                    / "ribo"
+                    / legacy_study_id
+                    / "ribo"
+                    / "experiments"
+                    / f"{experiment.experiment_alias}.ribo"
+                )
+                check = _check_exists(
+                    f"experiment_ribo::{legacy_study_id}::{experiment.experiment_alias}",
+                    sandbox_path,
+                    issues,
+                )
+                if check["exists"]:
+                    resolved_source = str(sandbox_path.resolve())
+                    expected_source = str(experiment.ribo_path.resolve())
+                    check["resolved_source"] = resolved_source
+                    check["expected_source"] = expected_source
+                    if resolved_source != expected_source:
+                        issues.append(
+                            "Sandbox ribo staging points at an unexpected source for "
+                            f"{legacy_study_id}/{experiment.experiment_alias}: "
+                            f"{resolved_source} != {expected_source}"
+                        )
+                checks.append(check)
 
     return checks, issues
 

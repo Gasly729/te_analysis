@@ -243,6 +243,11 @@ def test_materialize_expected_sandbox_tree_and_config_import_path() -> None:
             assert (runtime_root / "sandbox" / "src" / "__init__.py").exists()
             assert (runtime_root / "sandbox" / "trials" / "__init__.py").exists()
             assert (runtime_root / "sandbox" / "trials" / "run_ok" / "__init__.py").exists()
+            canonical_ribo = runtime_root / "sandbox" / "data" / "ribo" / "study_a" / "ribo" / "experiments" / "EXP_A.ribo"
+            dedup_ribo = runtime_root / "sandbox" / "data" / "ribo" / "study_a_dedup" / "ribo" / "experiments" / "EXP_A.ribo"
+            assert canonical_ribo.exists()
+            assert dedup_ribo.exists()
+            assert canonical_ribo.resolve() == dedup_ribo.resolve()
             config_path = runtime_root / "sandbox" / "trials" / "run_ok" / "config.py"
             assert config_path.exists()
             provenance = json.loads((runtime_root / "logs" / "wrapper_provenance.json").read_text())
@@ -298,6 +303,13 @@ def test_prepare_isolated_smoke_readiness_updates_logs_and_provenance() -> None:
             assert report["status"] == "ready_for_stage0_isolated_smoke"
             assert report["next_minimal_validation_action"]["launch_cwd"] == str(materialized.sandbox_root)
             assert report["next_minimal_validation_action"]["command"] == "python -m trials.run_ok.config"
+            required_paths = {
+                check["label"]: check
+                for check in report["checks"]["required_paths"]
+            }
+            assert "experiment_ribo::study_a::EXP_A" in required_paths
+            assert "experiment_ribo::study_a_dedup::EXP_A" in required_paths
+            assert required_paths["experiment_ribo::study_a::EXP_A"]["resolved_source"] == required_paths["experiment_ribo::study_a_dedup::EXP_A"]["resolved_source"]
 
             provenance = json.loads(materialized.provenance_path.read_text())
             assert provenance["generated_config_path"] == str(materialized.generated_config_path)
