@@ -1,7 +1,7 @@
 {
-  "baseline_name": "legacy_te_stage2_positive_smoke",
+  "baseline_name": "legacy_te_final_positive_smoke",
   "run_id": "verify_gse105082_hela_triplet_stage2",
-  "target_stage": 2,
+  "target_stage": 3,
   "study_id": "GSE105082",
   "grouping": "HeLa",
   "cohort": [
@@ -22,13 +22,38 @@
     "readiness": "PYTHONPATH=src python -c \"from te_analysis.downstream.legacy_te_model import prepare_legacy_te_model_isolated_smoke; prepare_legacy_te_model_isolated_smoke('$RUNTIME_ROOT')\"",
     "stage0": "MPLCONFIGDIR=/tmp/mplconfig_$RUN_ID python -m \"trials.$RUN_ID.config\"",
     "stage1": "python src/ribobase_counts_processing.py -i \"trials/$RUN_ID/ribo_raw.csv\" -r \"trials/$RUN_ID/rnaseq_raw.csv\" -m \"paired\" -o \"trials/$RUN_ID\"",
-    "stage2": "Rscript src/TE.R \"trials/$RUN_ID\""
+    "stage2": "Rscript src/TE.R \"trials/$RUN_ID\"",
+    "stage3": "python src/transpose_TE.py -o \"trials/$RUN_ID\""
   },
   "expected_stage2_outputs": [
     "human_TE_sample_level.rda",
     "human_TE_cellline_all.csv"
   ],
-  "stage3_in_scope": false,
+  "expected_stage3_outputs": [
+    "human_TE_cellline_all_T.csv"
+  ],
+  "stage3_in_scope": true,
+  "final_output_contract": {
+    "path_relative_to_runtime": "sandbox/trials/verify_gse105082_hela_triplet_stage2/human_TE_cellline_all_T.csv",
+    "shape": [
+      10862,
+      1
+    ],
+    "column_names": [
+      "HeLa"
+    ],
+    "index_null_count": 0,
+    "index_unique": false,
+    "duplicate_gene_identifier_count": 15,
+    "duplicate_gene_identifier_families": [
+      "H1",
+      "H3",
+      "HLA",
+      "MT",
+      "NME1"
+    ],
+    "stage2_stage3_relation": "Stage 3 output must equal human_TE_cellline_all.csv transposed with transcript suffixes stripped via regex \".(.*)\"."
+  },
   "single_sample_stage2_expected_failure": true,
   "runtime_note_relative_path": "data/downstream_runs/verify_gse105082_hela_triplet_stage2/compatibility_note.md"
 }
