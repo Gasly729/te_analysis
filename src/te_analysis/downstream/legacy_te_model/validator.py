@@ -61,6 +61,12 @@ def validate_wrapper_request(request: WrapperRequest) -> None:
             f"Unsupported execution_mode: {request.execution_mode}",
         )
 
+    if request.target_stage not in (0, 1, 2, 3):
+        raise LegacyTeModelContractError(
+            "invalid-target-stage",
+            f"target_stage must be one of 0, 1, 2, or 3: {request.target_stage}",
+        )
+
     _require_absolute_path(
         request.handoff_manifest_path,
         code="handoff-manifest-not-absolute",
@@ -275,6 +281,19 @@ def validate_sidecars(manifest: HandoffManifestV1, *, request: WrapperRequest) -
             )
 
 
+def validate_target_stage_eligibility(manifest: HandoffManifestV1, *, request: WrapperRequest) -> None:
+    if request.target_stage < 2:
+        return
+
+    matched_sample_count = len(manifest.experiments)
+    if matched_sample_count < 2:
+        raise LegacyTeModelContractError(
+            "stage2-methodological-boundary",
+            "target_stage >= 2 requires at least 2 matched samples covered by grouping_csv. "
+            "Single-sample runtimes remain valid for Stage 0/1 smoke but are not Stage-2-eligible.",
+        )
+
+
 def inspect_ribo_for_rnaseq_presence(experiment: HandoffExperiment) -> bool:
     try:
         from ribopy import Ribo
@@ -362,4 +381,5 @@ def validate_request_and_manifest(request: WrapperRequest, manifest: HandoffMani
     validate_wrapper_request(request)
     validate_handoff_manifest(manifest, request=request)
     validate_sidecars(manifest, request=request)
+    validate_target_stage_eligibility(manifest, request=request)
     validate_dual_rnaseq(manifest)

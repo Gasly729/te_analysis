@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import importlib
 import json
 import os
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .contracts import (
+    LegacyTeModelContractError,
     SPEC_VERSION,
     WRAPPER_NAME,
     ExecutionMode,
@@ -21,6 +23,7 @@ from .contracts import (
     load_handoff_manifest,
     load_wrapper_request,
 )
+from .validator import validate_target_stage_eligibility
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -78,6 +81,66 @@ def _check_exists(label: str, path: Path, issues: list[str]) -> dict[str, Any]:
         "path": str(path),
         "exists": exists,
     }
+
+
+def _read_grouping_aliases(path: Path) -> set[str]:
+    with path.open(newline="") as handle:
+        reader = csv.DictReader(handle)
+        fieldnames = reader.fieldnames or ()
+        if "experiment_alias" not in fieldnames:
+            raise LegacyTeModelContractError(
+                "missing-grouping-experiment-alias",
+                f"grouping_csv must contain experiment_alias: {path}",
+            )
+        aliases: set[str] = set()
+        for row in reader:
+            alias = (row.get("experiment_alias") or "").strip()
+            if alias:
+                aliases.add(alias)
+    return aliases
+
+
+def _probe_target_stage_eligibility(
+    *,
+    sandbox_root: Path,
+    request: WrapperRequest | None,
+    manifest: HandoffManifestV1 | None,
+) -> tuple[dict[str, Any], list[str]]:
+    target_stage = None if request is None else request.target_stage
+    details: dict[str, Any] = {
+        "checked": request is not None and manifest is not None,
+        "target_stage": target_stage,
+        "matched_sample_count": None,
+        "manifest_sample_count": None if manifest is None else len(manifest.experiments),
+        "stage2_eligible": None,
+    }
+    issues: list[str] = []
+
+    if request is None or manifest is None:
+        return details, issues
+
+    grouping_path = sandbox_root / "data" / "infor_filter.csv"
+    experiment_aliases = [experiment.experiment_alias for experiment in manifest.experiments]
+    if grouping_path.exists():
+        try:
+            grouping_aliases = _read_grouping_aliases(grouping_path)
+        except LegacyTeModelContractError as exc:
+            issues.append(str(exc))
+            return details, issues
+        matched_sample_count = sum(alias in grouping_aliases for alias in experiment_aliases)
+    else:
+        matched_sample_count = 0
+    details["matched_sample_count"] = matched_sample_count
+
+    try:
+        validate_target_stage_eligibility(manifest, request=request)
+    except LegacyTeModelContractError as exc:
+        details["stage2_eligible"] = False
+        issues.append(str(exc))
+    else:
+        details["stage2_eligible"] = target_stage is None or target_stage < 2 or matched_sample_count >= 2
+
+    return details, issues
 
 
 def _iter_legacy_study_layouts(study_id: str) -> tuple[str, str]:
@@ -320,6 +383,7 @@ def _update_provenance(
     status: str,
     next_stage0_command: str,
     ready_for_stage0_isolated_smoke: bool,
+    target_stage: int | None,
 ) -> None:
     payload = _read_json(provenance_path) if provenance_path.exists() else {}
     payload.setdefault("wrapper_name", WRAPPER_NAME)
@@ -348,6 +412,7 @@ def _update_provenance(
     payload["readiness_probe"] = {
         "checked_at": checked_at,
         "status": status,
+        "target_stage": target_stage,
         "ready_for_stage0_isolated_smoke": ready_for_stage0_isolated_smoke,
         "launch_cwd": str(sandbox_root),
         "next_stage0_command": next_stage0_command,
@@ -391,6 +456,7 @@ def prepare_legacy_te_model_isolated_smoke(
 
     checked_at = datetime.now(timezone.utc).isoformat()
     next_stage0_command = f"python -m trials.{run_id}.config"
+    target_stage = None if request is None else request.target_stage
     issues: list[str] = []
 
     if not request_path.exists():
@@ -426,6 +492,13 @@ def prepare_legacy_te_model_isolated_smoke(
     )
     issues.extend(config_import_issues)
 
+    stage_target_details, stage_target_issues = _probe_target_stage_eligibility(
+        sandbox_root=sandbox_root,
+        request=request,
+        manifest=manifest,
+    )
+    issues.extend(stage_target_issues)
+
     ready_for_stage0_isolated_smoke = not issues
     status = (
         "ready_for_stage0_isolated_smoke"
@@ -440,6 +513,7 @@ def prepare_legacy_te_model_isolated_smoke(
         "sandbox_root": str(sandbox_root),
         "generated_config_path": str(generated_config_path),
         "checked_at": checked_at,
+        "target_stage": target_stage,
         "status": status,
         "ready_for_stage0_isolated_smoke": ready_for_stage0_isolated_smoke,
         "next_minimal_validation_action": {
@@ -451,6 +525,7 @@ def prepare_legacy_te_model_isolated_smoke(
             "required_paths": path_checks,
             "pipeline_shell_syntax": pipeline_syntax_details,
             "trial_config_import": config_import_details,
+            "target_stage_eligibility": stage_target_details,
         },
         "blocking_issues": issues,
     }
@@ -459,6 +534,7 @@ def prepare_legacy_te_model_isolated_smoke(
     log_lines = [
         f"status={status}",
         f"checked_at={checked_at}",
+        f"target_stage={target_stage}",
         f"runtime_root={runtime_root}",
         f"sandbox_root={sandbox_root}",
         f"launch_cwd={sandbox_root}",
@@ -485,6 +561,7 @@ def prepare_legacy_te_model_isolated_smoke(
         status=status,
         next_stage0_command=next_stage0_command,
         ready_for_stage0_isolated_smoke=ready_for_stage0_isolated_smoke,
+        target_stage=target_stage,
     )
 
     return ExecutionReadinessResult(

@@ -30,32 +30,44 @@ def _write_json(path: Path, payload: dict) -> Path:
     return path
 
 
-def _make_valid_fixture(tmp_root: Path, *, has_rnaseq: bool = True, include_experiments: bool = True) -> tuple[Path, Path]:
-    ribo_path = tmp_root / "inputs" / "EXP_A.ribo"
-    ribo_path.parent.mkdir(parents=True, exist_ok=True)
-    ribo_path.write_text("")
-
+def _make_valid_fixture(
+    tmp_root: Path,
+    *,
+    has_rnaseq: bool = True,
+    include_experiments: bool = True,
+    experiment_aliases: tuple[str, ...] = ("EXP_A",),
+    target_stage: int = 1,
+    cell_line: str = "HEK293",
+) -> tuple[Path, Path]:
     nonpolya_csv = tmp_root / "sidecars" / "nonpolyA_gene.csv"
     nonpolya_csv.parent.mkdir(parents=True, exist_ok=True)
     nonpolya_csv.write_text("Gene,GENE_true,anno\nGENE1,GENE1,non-poly\n")
 
     grouping_csv = tmp_root / "sidecars" / "infor_filter.csv"
-    grouping_csv.write_text('experiment_alias,cell_line\nEXP_A,HEK293\n')
+    grouping_csv.write_text(
+        "experiment_alias,cell_line\n"
+        + "\n".join(f"{experiment_alias},{cell_line}" for experiment_alias in experiment_aliases)
+        + "\n"
+    )
 
     request_path = tmp_root / "request.json"
     manifest_path = tmp_root / "handoff_manifest.json"
 
     experiments = []
     if include_experiments:
-        experiments = [
-            {
-                "experiment_alias": "EXP_A",
-                "study_id": "study_a",
-                "ribo_path": str(ribo_path),
-                "organism": "human",
-                "has_rnaseq": has_rnaseq,
-            }
-        ]
+        for experiment_alias in experiment_aliases:
+            ribo_path = tmp_root / "inputs" / f"{experiment_alias}.ribo"
+            ribo_path.parent.mkdir(parents=True, exist_ok=True)
+            ribo_path.write_text("")
+            experiments.append(
+                {
+                    "experiment_alias": experiment_alias,
+                    "study_id": "study_a",
+                    "ribo_path": str(ribo_path),
+                    "organism": "human",
+                    "has_rnaseq": has_rnaseq,
+                }
+            )
 
     _write_json(
         manifest_path,
@@ -72,6 +84,7 @@ def _make_valid_fixture(tmp_root: Path, *, has_rnaseq: bool = True, include_expe
         {
             "run_id": "run_ok",
             "execution_mode": "legacy_default_counts",
+            "target_stage": target_stage,
             "handoff_manifest_path": str(manifest_path),
             "sidecars": {
                 "nonpolya_csv": str(nonpolya_csv),
@@ -301,6 +314,7 @@ def test_prepare_isolated_smoke_readiness_updates_logs_and_provenance() -> None:
 
             report = json.loads(readiness.readiness_report_path.read_text())
             assert report["status"] == "ready_for_stage0_isolated_smoke"
+            assert report["target_stage"] == 1
             assert report["next_minimal_validation_action"]["launch_cwd"] == str(materialized.sandbox_root)
             assert report["next_minimal_validation_action"]["command"] == "python -m trials.run_ok.config"
             required_paths = {
@@ -310,14 +324,64 @@ def test_prepare_isolated_smoke_readiness_updates_logs_and_provenance() -> None:
             assert "experiment_ribo::study_a::EXP_A" in required_paths
             assert "experiment_ribo::study_a_dedup::EXP_A" in required_paths
             assert required_paths["experiment_ribo::study_a::EXP_A"]["resolved_source"] == required_paths["experiment_ribo::study_a_dedup::EXP_A"]["resolved_source"]
+            assert report["checks"]["target_stage_eligibility"]["target_stage"] == 1
+            assert report["checks"]["target_stage_eligibility"]["stage2_eligible"] is True
 
             provenance = json.loads(materialized.provenance_path.read_text())
             assert provenance["generated_config_path"] == str(materialized.generated_config_path)
             assert provenance["readiness_probe"]["status"] == "ready_for_stage0_isolated_smoke"
+            assert provenance["readiness_probe"]["target_stage"] == 1
             assert provenance["readiness_probe"]["next_stage0_command"] == "python -m trials.run_ok.config"
             assert provenance["log_targets"]["isolated_smoke_readiness_report"] == str(readiness.readiness_report_path)
             assert provenance["log_targets"]["isolated_smoke_readiness_log"] == str(readiness.readiness_log_path)
             assert provenance["status"] == "materialized_not_executed"
+        finally:
+            _clear_fake_legacy_import_deps()
+
+
+def test_reject_single_sample_stage2_target_as_methodological_boundary() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_root = Path(tmpdir)
+        request_path, manifest_path = _make_valid_fixture(tmp_root, has_rnaseq=True, target_stage=2)
+        _install_fake_ribopy(has_rnaseq=True)
+        try:
+            from te_analysis.downstream.legacy_te_model.contracts import load_handoff_manifest, load_wrapper_request
+
+            request = load_wrapper_request(request_path)
+            manifest = load_handoff_manifest(manifest_path)
+            try:
+                validate_request_and_manifest(request, manifest)
+            except Exception as exc:
+                assert getattr(exc, "code", None) == "stage2-methodological-boundary"
+                assert "at least 2 matched samples" in str(exc)
+                assert "Single-sample runtimes remain valid for Stage 0/1 smoke" in str(exc)
+            else:
+                raise AssertionError("Expected Stage 2 single-sample methodological boundary")
+        finally:
+            sys.modules.pop("ribopy", None)
+
+
+def test_accept_stage2_target_for_triplet_runtime_readiness() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_root = Path(tmpdir)
+        request_path, _ = _make_valid_fixture(
+            tmp_root,
+            has_rnaseq=True,
+            experiment_aliases=("EXP_A", "EXP_B", "EXP_C"),
+            target_stage=2,
+            cell_line="HeLa",
+        )
+        _install_fake_legacy_import_deps(has_rnaseq=True)
+        try:
+            materialized = materialize_legacy_te_model_wrapper(request_path, runtime_base=tmp_root / "runtime")
+            readiness = prepare_legacy_te_model_isolated_smoke(materialized.runtime_root)
+
+            assert readiness.ready_for_stage0_isolated_smoke is True
+            report = json.loads(readiness.readiness_report_path.read_text())
+            assert report["target_stage"] == 2
+            assert report["checks"]["target_stage_eligibility"]["target_stage"] == 2
+            assert report["checks"]["target_stage_eligibility"]["matched_sample_count"] == 3
+            assert report["checks"]["target_stage_eligibility"]["stage2_eligible"] is True
         finally:
             _clear_fake_legacy_import_deps()
 

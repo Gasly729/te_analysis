@@ -130,6 +130,7 @@ class WrapperRequest:
     execution_mode: ExecutionMode
     handoff_manifest_path: Path
     sidecars: WrapperSidecars
+    target_stage: int = 1
     source_legacy_root: Path = LEGACY_SOURCE_ROOT
 
     def as_dict(self) -> dict[str, Any]:
@@ -137,6 +138,7 @@ class WrapperRequest:
             "wrapper_name": WRAPPER_NAME,
             "run_id": self.run_id,
             "execution_mode": self.execution_mode.value,
+            "target_stage": self.target_stage,
             "handoff_manifest_path": str(self.handoff_manifest_path),
             "sidecars": self.sidecars.as_dict(),
             "source_legacy_root": str(self.source_legacy_root),
@@ -148,6 +150,7 @@ class WrapperRequest:
         return cls(
             run_id=str(data["run_id"]),
             execution_mode=ExecutionMode(str(data["execution_mode"])),
+            target_stage=int(data.get("target_stage", 1)),
             handoff_manifest_path=Path(str(data["handoff_manifest_path"])),
             sidecars=WrapperSidecars(
                 nonpolya_csv=Path(str(sidecars["nonpolya_csv"])),
