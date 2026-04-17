@@ -128,6 +128,18 @@ def _split_semicolon_values(value: str) -> tuple[str, ...]:
     return tuple(token for token in tokens if token)
 
 
+def _candidate_experiment_accessions(metadata_row: pd.Series) -> tuple[str, ...]:
+    candidates: list[str] = []
+    for raw_value in (
+        metadata_row.get("experiment_accession", ""),
+        metadata_row.get("experiment_alias", ""),
+    ):
+        value = str(raw_value).strip().upper()
+        if EXPERIMENT_ACCESSION_PATTERN.match(value) and value not in candidates:
+            candidates.append(value)
+    return tuple(candidates)
+
+
 def read_experiment_metadata(metadata_path: Path) -> MetadataReadResult:
     """Load experiment-level metadata using the project's proven schema handling."""
 
@@ -271,7 +283,11 @@ def _append_unresolved_row(
     )
 
 
-def resolve_metadata_runs(metadata_result: MetadataReadResult, manifest_frame: pd.DataFrame) -> ResolutionResult:
+def resolve_metadata_runs(
+    metadata_result: MetadataReadResult,
+    manifest_frame: pd.DataFrame,
+    local_mapping_frame: pd.DataFrame | None = None,
+) -> ResolutionResult:
     """Expand experiment-level metadata rows into run-level resolved and unresolved tables."""
 
     metadata = _normalize_text_frame(metadata_result.frame)
@@ -285,6 +301,12 @@ def resolve_metadata_runs(metadata_result: MetadataReadResult, manifest_frame: p
             inventory_by_alias[alias].append(row)
         for alias in _split_semicolon_values(row["parsed_source_aliases"]):
             inventory_by_parsed_alias[alias].append(row)
+
+    mapping_by_experiment: dict[str, list[pd.Series]] = defaultdict(list)
+    if local_mapping_frame is not None and not local_mapping_frame.empty:
+        mapping_frame = _normalize_text_frame(local_mapping_frame)
+        for _, row in mapping_frame.iterrows():
+            mapping_by_experiment[row["experiment_accession"]].append(row)
 
     resolved_rows: list[dict[str, str]] = []
     unresolved_rows: list[dict[str, str]] = []
@@ -309,32 +331,56 @@ def resolve_metadata_runs(metadata_result: MetadataReadResult, manifest_frame: p
                 {"row": inventory_row, "sources": set()},
             )["sources"].add("manifest.experiment_alias")
 
-        experiment_accession = metadata_row.get("experiment_accession", "")
-        if experiment_accession:
+        experiment_accessions = _candidate_experiment_accessions(metadata_row)
+        for experiment_accession in experiment_accessions:
             for inventory_row in inventory_by_parsed_alias.get(experiment_accession, []):
                 candidate_inventory.setdefault(
                     inventory_row["run_accession"],
                     {"row": inventory_row, "sources": set()},
                 )["sources"].add("manifest.experiment_accession")
 
-        if not candidate_inventory:
-            _append_unresolved_row(
-                unresolved_rows,
-                metadata_row,
-                unresolved_reason="no_local_run_match",
-            )
+        if candidate_inventory:
+            for run_accession in sorted(candidate_inventory):
+                candidate = candidate_inventory[run_accession]
+                resolution_source = ";".join(sorted(candidate["sources"]))
+                _append_resolved_row(
+                    resolved_rows,
+                    metadata_row,
+                    run_accession=run_accession,
+                    resolution_source=resolution_source,
+                    inventory_row=candidate["row"],
+                )
             continue
 
-        for run_accession in sorted(candidate_inventory):
-            candidate = candidate_inventory[run_accession]
-            resolution_source = ";".join(sorted(candidate["sources"]))
-            _append_resolved_row(
-                resolved_rows,
-                metadata_row,
-                run_accession=run_accession,
-                resolution_source=resolution_source,
-                inventory_row=candidate["row"],
-            )
+        mapping_candidates: dict[str, dict[str, object]] = {}
+        for experiment_accession in experiment_accessions:
+            for mapping_row in mapping_by_experiment.get(experiment_accession, []):
+                mapping_candidates.setdefault(
+                    mapping_row["run_accession"],
+                    {"row": mapping_row, "sources": set()},
+                )["sources"].update(
+                    f"local_mapping:{source}"
+                    for source in _split_semicolon_values(mapping_row["mapping_source"])
+                )
+
+        if mapping_candidates:
+            for run_accession in sorted(mapping_candidates):
+                candidate = mapping_candidates[run_accession]
+                resolution_source = ";".join(sorted(candidate["sources"]))
+                _append_resolved_row(
+                    resolved_rows,
+                    metadata_row,
+                    run_accession=run_accession,
+                    resolution_source=resolution_source,
+                    inventory_row=inventory_by_run.get(run_accession),
+                )
+            continue
+
+        _append_unresolved_row(
+            unresolved_rows,
+            metadata_row,
+            unresolved_reason="no_local_run_match",
+        )
 
     resolved = pd.DataFrame(resolved_rows, columns=RESOLVED_COLUMNS, dtype=str)
     unresolved = pd.DataFrame(unresolved_rows, columns=UNRESOLVED_COLUMNS, dtype=str)
