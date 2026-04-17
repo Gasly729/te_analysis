@@ -33,7 +33,7 @@
     "human_TE_cellline_all_T.csv"
   ],
   "stage3_in_scope": true,
-  "final_output_contract": {
+  "baseline_specific_final_output_regression": {
     "path_relative_to_runtime": "sandbox/trials/verify_gse105082_hela_triplet_stage2/human_TE_cellline_all_T.csv",
     "shape": [
       10862,
@@ -53,6 +53,16 @@
       "NME1"
     ],
     "stage2_stage3_relation": "Stage 3 output must equal human_TE_cellline_all.csv transposed with transcript suffixes stripped via regex \".(.*)\"."
+  },
+  "general_stage3_output_contract": {
+    "output_file_name": "human_TE_cellline_all_T.csv",
+    "must_live_under_runtime_root": true,
+    "must_be_non_empty": true,
+    "parse_as_csv_with_index_col_zero": true,
+    "minimum_output_columns": 1,
+    "column_axis_unique": true,
+    "index_null_count": 0,
+    "stage2_stage3_relation": "Stage 3 output must equal the runtime's human_TE_cellline_all.csv transposed with transcript suffixes stripped via regex \".(.*)\"."
   },
   "single_sample_stage2_expected_failure": true,
   "runtime_note_relative_path": "data/downstream_runs/verify_gse105082_hela_triplet_stage2/compatibility_note.md"

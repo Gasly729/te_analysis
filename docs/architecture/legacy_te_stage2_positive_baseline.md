@@ -24,8 +24,8 @@ Stage-3 final output conclusion:
 - legacy `transpose_TE.py` is the real Stage 3 entrypoint
 - Stage 3 consumes `human_TE_cellline_all.csv` and writes `human_TE_cellline_all_T.csv`
 - Stage 3 is a postprocessing step: transpose the Stage-2 cell-line table and strip transcript suffixes with regex `\.(.*)`
-- the proven final output has shape `10862 x 1` with the single column `HeLa`
-- the proven final output preserves duplicate gene identifiers after suffix stripping; this is a legacy output semantic, not a new wrapper guarantee
+- the proven final output for this baseline has shape `10862 x 1` with the single column `HeLa`
+- the proven final output for this baseline preserves duplicate gene identifiers after suffix stripping; this is a legacy output semantic, not a new wrapper guarantee
 
 Bounded commands:
 ```bash
@@ -65,15 +65,24 @@ head -5 "$TRIAL_ROOT/human_TE_cellline_all.csv"
 head -5 "$TRIAL_ROOT/human_TE_cellline_all_T.csv"
 ```
 
-Final output contract:
+Baseline-specific Stage-3 regression lock:
 - `human_TE_cellline_all_T.csv` must exist under `data/downstream_runs/verify_gse105082_hela_triplet_stage2/sandbox/trials/verify_gse105082_hela_triplet_stage2/`
 - the file must be non-empty
 - when loaded with `pandas.read_csv(..., index_col=0)`, shape must be exactly `10862 x 1`
 - the only output column must be `HeLa`
-- the output column axis must not contain duplicates
+- duplicate output columns must not appear
 - the row identifiers must be non-null
-- the output must equal `human_TE_cellline_all.csv` transposed with transcript suffixes stripped via regex `\.(.*)`
 - because the real legacy Stage-3 artifact strips transcript suffixes without deduplication, duplicate gene identifiers remain in the final row index; this is an observed legacy semantic and is intentionally locked as-is
+
+General Stage-3 output contract:
+- this layer is cross-runtime and must not assume the human/HeLa baseline shape `10862 x 1`
+- the runtime's `human_TE_cellline_all_T.csv` must exist when Stage 3 is in scope
+- the file must be non-empty and remain under the controlled runtime root
+- the file must parse as a CSV table with `pandas.read_csv(..., index_col=0)`
+- there must be at least one output column
+- duplicate output columns must not appear
+- the row identifiers must be non-null
+- the output must equal the runtime's `human_TE_cellline_all.csv` transposed with transcript suffixes stripped via regex `\.(.*)`
 
 Runtime-local note:
 - `data/downstream_runs/verify_gse105082_hela_triplet_stage2/compatibility_note.md`

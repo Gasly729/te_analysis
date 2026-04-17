@@ -21,9 +21,13 @@ def test_stage3_final_output_contract_is_locked_to_runtime_artifact() -> None:
     trial_root = runtime_root / "sandbox" / "trials" / run_id
     stage2_path = trial_root / "human_TE_cellline_all.csv"
     stage3_path = trial_root / "human_TE_cellline_all_T.csv"
-    contract = baseline["final_output_contract"]
+    contract = baseline["general_stage3_output_contract"]
 
     assert stage3_path.exists(), f"Missing Stage 3 output: {stage3_path}"
+    assert stage3_path.name == contract["output_file_name"], (
+        f"Unexpected Stage 3 output name {stage3_path.name}; "
+        f"expected {contract['output_file_name']}."
+    )
     assert stage3_path.stat().st_size > 0, f"Stage 3 output is empty: {stage3_path}"
     try:
         relative_stage3_path = stage3_path.relative_to(runtime_root)
@@ -31,20 +35,16 @@ def test_stage3_final_output_contract_is_locked_to_runtime_artifact() -> None:
         raise AssertionError(
             f"Stage 3 output must stay under the controlled runtime root: {stage3_path}"
         )
-    assert relative_stage3_path.as_posix() == contract["path_relative_to_runtime"], (
-        "Stage 3 output path drifted away from the frozen baseline contract."
+    assert contract["must_live_under_runtime_root"] is True
+    assert relative_stage3_path.as_posix().startswith("sandbox/trials/"), (
+        "Stage 3 output path drifted away from the controlled sandbox trial tree."
     )
 
     stage2_df = pd.read_csv(stage2_path, index_col=0)
     stage3_df = pd.read_csv(stage3_path, index_col=0)
 
-    expected_shape = tuple(contract["shape"])
-    assert stage3_df.shape == expected_shape, (
-        f"Unexpected Stage 3 shape {stage3_df.shape}; expected {expected_shape}."
-    )
-    assert list(stage3_df.columns) == contract["column_names"], (
-        f"Unexpected Stage 3 columns {list(stage3_df.columns)}; "
-        f"expected {contract['column_names']}."
+    assert stage3_df.shape[1] >= contract["minimum_output_columns"], (
+        f"Stage 3 output has no data columns: shape={stage3_df.shape}."
     )
     assert stage3_df.columns.is_unique, "Stage 3 output columns must be unique."
     assert int(stage3_df.index.isna().sum()) == contract["index_null_count"], (
@@ -55,15 +55,4 @@ def test_stage3_final_output_contract_is_locked_to_runtime_artifact() -> None:
     expected_stage3_df.index = expected_stage3_df.index.str.replace(r"\.(.*)", "", regex=True)
     assert stage3_df.equals(expected_stage3_df), (
         "Stage 3 output no longer matches the frozen Stage-2-to-Stage-3 transpose contract."
-    )
-
-    duplicate_gene_count = int(stage3_df.index.duplicated().sum())
-    assert duplicate_gene_count == contract["duplicate_gene_identifier_count"], (
-        f"Unexpected duplicate gene identifier count {duplicate_gene_count}; "
-        f"expected {contract['duplicate_gene_identifier_count']}."
-    )
-    duplicate_families = stage3_df.index[stage3_df.index.duplicated(keep=False)].unique().tolist()
-    assert duplicate_families == contract["duplicate_gene_identifier_families"], (
-        f"Unexpected duplicate gene identifier families {duplicate_families}; "
-        f"expected {contract['duplicate_gene_identifier_families']}."
     )
