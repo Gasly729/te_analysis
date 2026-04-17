@@ -107,6 +107,7 @@ def build_pilot_candidates(
         corrected_types = sorted({value for value in study_runs["corrected_type"] if value})
         pair_map = _paired_rna_aliases(study_metadata)
         ribo_experiments = sorted(set(study_runs.loc[study_runs["corrected_type"] == "Ribo-Seq", "experiment_alias"]))
+        rna_experiments = sorted(set(study_runs.loc[study_runs["corrected_type"] == "RNA-Seq", "experiment_alias"]))
         staged_candidates = [
             Path(path)
             for path in study_manifest["linked_path"]
@@ -114,6 +115,7 @@ def build_pilot_candidates(
         ]
         all_fastq_present = bool(staged_candidates) and all(path.exists() for path in staged_candidates)
         pairing_complete = bool(ribo_experiments) and all(exp in pair_map for exp in ribo_experiments)
+        balanced_modalities = bool(ribo_experiments) and len(ribo_experiments) == len(rna_experiments)
         supported_reference = len(organisms) == 1 and organisms[0].lower() in reference_catalog
 
         score = 0
@@ -131,6 +133,8 @@ def build_pilot_candidates(
             score += 20
         if pairing_complete:
             score += 20
+        if balanced_modalities:
+            score += 15
         if set(study_runs["library_layout"]) == {"SINGLE"}:
             score += 10
         score -= abs(study_runs["run_accession"].nunique() - 6) * 5
@@ -151,6 +155,9 @@ def build_pilot_candidates(
                 "single_organism": len(organisms) == 1,
                 "supported_reference": supported_reference,
                 "pairing_complete": pairing_complete,
+                "ribo_experiment_count": len(ribo_experiments),
+                "rna_experiment_count": len(rna_experiments),
+                "balanced_modalities": balanced_modalities,
                 "library_layouts": _collapse_unique(study_runs["library_layout"]),
                 "pilot_ready": (
                     len(study_unresolved) == 0
