@@ -190,5 +190,14 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Local test workspace
-/tests/
+# Frozen reference material
+/raw_motheds/
+
+# Local smoke fixtures not part of the source patch
+/tests/test_data/GSE105082/
+
+# Local runtime-generated data roots
+/data/raw/
+/data/scratch/
+/data/ribo/
+/data/qc/
