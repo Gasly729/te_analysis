@@ -18,6 +18,12 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 
+@pytest.fixture(autouse=True)
+def _reset_force_prefer_state() -> None:
+    MODULE.configure_force_prefer_batch2_runs("")
+    MODULE.FORCED_SIZE_MISMATCH_KEYS = set()
+
+
 def _write_fastq(path: Path, content: str = "fastq") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
@@ -365,6 +371,73 @@ def test_hybrid_species_skipped(tmp_path: Path) -> None:
     assert len(skipped) == 1
 
 
+def test_orphan_metadata_has_distinct_skip_reason(tmp_path: Path) -> None:
+    sources = _source_roots(tmp_path)
+    _write_metadata(
+        _metadata_path(tmp_path),
+        [
+            {
+                "experiment_alias": "GSM905",
+                "study_name": "GSE905",
+                "organism": "Mouse",
+                "library_strategy": "RNA-Seq",
+                "library_layout": "SINGLE",
+                "corrected_type": "RNA-Seq",
+                "experiment_accession": "SRX905",
+                "run_alias": "SRR905",
+            }
+        ],
+    )
+
+    plan = MODULE.run_ingest(
+        source_roots=sources,
+        target_root=_target_root(tmp_path),
+        metadata_path=_metadata_path(tmp_path),
+        alias_table_path=ALIAS_PATH,
+        conflict_policy="prefer-batch2",
+        apply=False,
+    )
+
+    orphan_rows = [row for row in plan.rows if row.skip_reason == "orphan_metadata"]
+    srr_missing_rows = [row for row in plan.rows if row.skip_reason == "srr_not_in_metadata"]
+    assert len(orphan_rows) == 1
+    assert orphan_rows[0].gsm == "GSM905"
+    assert len(srr_missing_rows) == 0
+
+
+def test_hybrid_detected_by_star_separator(tmp_path: Path) -> None:
+    sources = _source_roots(tmp_path)
+    _write_fastq(sources["batch1"] / "SRR906_GSM906_yeast_RNA-Seq.fastq.gz")
+    _write_metadata(
+        _metadata_path(tmp_path),
+        [
+            {
+                "experiment_alias": "GSM906",
+                "study_name": "GSE906",
+                "organism": "Saccharomyces cerevisiae * Saccharomyces paradoxus",
+                "library_strategy": "RNA-Seq",
+                "library_layout": "SINGLE",
+                "corrected_type": "RNA-Seq",
+                "experiment_accession": "SRX906",
+                "run_alias": "SRR906",
+            }
+        ],
+    )
+
+    plan = MODULE.run_ingest(
+        source_roots=sources,
+        target_root=_target_root(tmp_path),
+        metadata_path=_metadata_path(tmp_path),
+        alias_table_path=ALIAS_PATH,
+        conflict_policy="prefer-batch2",
+        apply=False,
+    )
+
+    skipped = [row for row in plan.rows if row.skip_reason == "hybrid_species_phase2"]
+    assert len(skipped) == 1
+    assert skipped[0].gsm == "GSM906"
+
+
 def test_gse_missing_goes_to_ungrouped(tmp_path: Path) -> None:
     sources = _source_roots(tmp_path)
     _write_fastq(sources["batch1"] / "SRR1000_GSM1000_Mouse_RNA-Seq.fastq.gz")
@@ -578,3 +651,39 @@ def test_alias_fallback_without_run_alias_column(tmp_path: Path) -> None:
     assert plan.metadata_bundle.has_run_alias_column is False
     rows = _load_manifest_rows(_target_root(tmp_path))
     assert rows[0]["gsm"] == "GSM1500"
+
+
+def test_force_prefer_batch2_promotes_size_mismatch_to_matched(tmp_path: Path) -> None:
+    sources = _source_roots(tmp_path)
+    _write_fastq(sources["batch1"] / "SRR1600_GSM1600_Mouse_RNA-Seq.fastq.gz", content="short")
+    preferred = _write_fastq(sources["batch2"] / "SRR1600_GSM1600_Mouse_RNA-Seq.fastq.gz", content="longer")
+    _write_metadata(
+        _metadata_path(tmp_path),
+        [
+            {
+                "experiment_alias": "GSM1600",
+                "study_name": "GSE1600",
+                "organism": "Mouse",
+                "library_strategy": "RNA-Seq",
+                "library_layout": "SINGLE",
+                "corrected_type": "RNA-Seq",
+                "experiment_accession": "SRX1600",
+                "run_alias": "SRR1600",
+            }
+        ],
+    )
+    MODULE.configure_force_prefer_batch2_runs("SRR1600")
+
+    plan = MODULE.run_ingest(
+        source_roots=sources,
+        target_root=_target_root(tmp_path),
+        metadata_path=_metadata_path(tmp_path),
+        alias_table_path=ALIAS_PATH,
+        conflict_policy="prefer-batch2",
+        apply=True,
+    )
+
+    assert len(plan.matched_rows) == 1
+    assert Path(plan.matched_rows[0].linked_path).resolve() == preferred.resolve()
+    assert "forced_prefer_batch2_size_mismatch" in plan.matched_rows[0].warning
+    assert len([row for row in plan.rows if row.skip_reason == "size_mismatch_between_batches"]) == 0

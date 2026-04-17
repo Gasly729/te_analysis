@@ -73,6 +73,13 @@ RUN_ID_PATTERN = re.compile(r"(SRR\d+|ERR\d+|DRR\d+)")
 ALIAS_PATTERN = re.compile(r"(GSM\d+|SRX\d+|ERX\d+|DRX\d+)")
 MATE_PATTERN = re.compile(r"_([12])\.fastq(?:\.gz)?$")
 STRICT_HYBRID_PATTERN = re.compile(r"^Saccharomyces_[A-Za-z]+_x_[A-Za-z_]+$")
+RAW_HYBRID_PATTERNS = (
+    re.compile(r"_x_", re.IGNORECASE),
+    re.compile(r"\s+x\s", re.IGNORECASE),
+    re.compile(r"\s*\*\s*"),
+)
+FORCE_PREFER_BATCH2_RUNS: set[str] = set()
+FORCED_SIZE_MISMATCH_KEYS: set[tuple[str, str]] = set()
 
 
 class IngestError(RuntimeError):
@@ -255,6 +262,19 @@ def is_hybrid_species(organism_canonical: str) -> bool:
         return False
     left, right = organism_canonical.split("_x_", 1)
     return _is_binomial_name(left) and _is_binomial_name(right)
+
+
+def is_hybrid_organism_raw(organism_raw: str) -> bool:
+    normalized = organism_raw.strip()
+    if not normalized:
+        return False
+    return any(pattern.search(normalized) for pattern in RAW_HYBRID_PATTERNS)
+
+
+def configure_force_prefer_batch2_runs(raw_value: str) -> None:
+    global FORCE_PREFER_BATCH2_RUNS
+    tokens = [token.strip() for token in raw_value.split(",")]
+    FORCE_PREFER_BATCH2_RUNS = {token for token in tokens if token}
 
 
 def _load_alias_table(path: Path) -> dict[str, str]:
@@ -466,6 +486,8 @@ def resolve_source_conflicts(
     *,
     conflict_policy: str,
 ) -> tuple[tuple[SourceFile, ...], tuple[ConflictRow, ...], dict[tuple[str, str], str]]:
+    global FORCED_SIZE_MISMATCH_KEYS
+    FORCED_SIZE_MISMATCH_KEYS = set()
     grouped: dict[tuple[str, str], list[SourceFile]] = defaultdict(list)
     for source_file in source_files:
         grouped[(source_file.run_id, source_file.mate)].append(source_file)
@@ -489,6 +511,11 @@ def resolve_source_conflicts(
 
         size_values = {source_file.size_bytes for source_file in files}
         if len(size_values) != 1:
+            if key[0] in FORCE_PREFER_BATCH2_RUNS and "batch2" in by_batch:
+                selected.append(by_batch["batch2"][0])
+                conflict_rows.append(_conflict_row_from_pair(key, files, chosen_batch="batch2"))
+                FORCED_SIZE_MISMATCH_KEYS.add(key)
+                continue
             conflict_rows.append(_conflict_row_from_pair(key, files, chosen_batch=""))
             size_mismatch_keys[key] = "size_mismatch_between_batches"
             continue
@@ -575,7 +602,7 @@ def _orphan_metadata_rows(
                     size_bytes="",
                     mtime_iso="",
                     status="skipped",
-                    skip_reason="srr_not_in_metadata",
+                    skip_reason="orphan_metadata",
                     warning="",
                 )
             )
@@ -635,6 +662,22 @@ def build_ingest_plan(
                     linked_path="",
                     status="skipped",
                     skip_reason="srr_not_in_metadata",
+                    warning="",
+                )
+            )
+            continue
+
+        if is_hybrid_organism_raw(metadata.organism_raw):
+            rows.append(
+                _manifest_row_for_source_file(
+                    source_file,
+                    metadata=metadata,
+                    organism_canonical="",
+                    seq_type="",
+                    gse="",
+                    linked_path="",
+                    status="skipped",
+                    skip_reason="hybrid_species_phase2",
                     warning="",
                 )
             )
@@ -755,6 +798,9 @@ def build_ingest_plan(
             suffix = f"_{source_file.mate}" if source_file.mate else ""
             normalized_name = f"{metadata.experiment_alias}_{seq_type}_{source_file.run_id}{suffix}.fastq.gz"
             linked_path = str(target_root / organism_canonical / gse_dir / normalized_name)
+            forced_warning = ""
+            if (source_file.run_id, source_file.mate) in FORCED_SIZE_MISMATCH_KEYS:
+                forced_warning = "forced_prefer_batch2_size_mismatch"
             rows.append(
                 _manifest_row_for_source_file(
                     source_file,
@@ -765,7 +811,7 @@ def build_ingest_plan(
                     linked_path=linked_path,
                     status="matched",
                     skip_reason="",
-                    warning=warning,
+                    warning=";".join(filter(None, (warning, forced_warning))),
                 )
             )
             matched_aliases.add(metadata.experiment_alias)
@@ -937,6 +983,7 @@ def render_ingest_report(plan: IngestPlan) -> str:
         ]
     )
     for reason in (
+        "orphan_metadata",
         "srr_not_in_metadata",
         "organism_unmapped",
         "hybrid_species_phase2",
@@ -979,6 +1026,7 @@ def render_ingest_report(plan: IngestPlan) -> str:
 
     lines.extend(["", "## Top Skip Examples", ""])
     for reason in (
+        "orphan_metadata",
         "srr_not_in_metadata",
         "organism_unmapped",
         "hybrid_species_phase2",
@@ -1110,6 +1158,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--metadata", type=Path, default=DEFAULT_METADATA_PATH)
     parser.add_argument("--conflict-policy", choices=("prefer-batch2", "prefer-batch1", "fail"), default="prefer-batch2")
     parser.add_argument("--alias-table", type=Path, default=ALIAS_FILE)
+    parser.add_argument("--force-prefer-batch2", default="")
     parser.add_argument("--dry-run", action="store_true", default=True)
     parser.add_argument("--apply", action="store_true")
     return parser
@@ -1118,6 +1167,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = build_argument_parser()
     args = parser.parse_args()
+    configure_force_prefer_batch2_runs(args.force_prefer_batch2)
     source_roots = dict(_parse_source_argument(item) for item in args.sources)
     run_ingest(
         source_roots=source_roots,
