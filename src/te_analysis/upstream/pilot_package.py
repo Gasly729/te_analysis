@@ -223,12 +223,31 @@ def _materialize_staged_symlink(dest: Path, target: Path) -> None:
     dest.symlink_to(target)
 
 
+def _fastq_extension(path: Path) -> str:
+    name = path.name
+    if name.endswith(".fastq.gz"):
+        return ".fastq.gz"
+    if name.endswith(".fastq"):
+        return ".fastq"
+    raise RuntimeError(f"unsupported FASTQ suffix for staged alias planning: {path}")
+
+
+def _snakefile_staged_basename(row: pd.Series) -> str:
+    target = _symlink_target(row)
+    run_accession = str(row["srr"]).strip()
+    mate = str(row.get("mate", "")).strip()
+    extension = _fastq_extension(target)
+    if mate in {"1", "2"}:
+        return f"{run_accession}_{mate}{extension}"
+    return f"{run_accession}{extension}"
+
+
 def _build_fastq_manifest(study_name: str, fastq_rows: pd.DataFrame, pilot_dir: Path) -> pd.DataFrame:
     rows: list[dict[str, str]] = []
     staged_root = pilot_dir / "staged_fastq"
     for _, row in fastq_rows.iterrows():
-        linked_path = Path(row["linked_path"])
-        staged_path = staged_root / linked_path.name
+        staged_basename = _snakefile_staged_basename(row)
+        staged_path = staged_root / staged_basename
         rows.append(
             {
                 "study_name": study_name,
@@ -239,11 +258,33 @@ def _build_fastq_manifest(study_name: str, fastq_rows: pd.DataFrame, pilot_dir: 
                 "source_path": row["source_path"],
                 "inventory_linked_path": row["linked_path"],
                 "real_target": row.get("real_target", ""),
+                "staged_fastq_basename": staged_basename,
                 "staged_fastq_path": str(staged_path),
                 "warning": row.get("warning", ""),
             }
         )
     return pd.DataFrame(rows, dtype=str)
+
+
+def _sync_staged_fastq_aliases(fastq_manifest: pd.DataFrame, fastq_rows: pd.DataFrame, pilot_dir: Path) -> None:
+    staged_root = pilot_dir / "staged_fastq"
+    staged_root.mkdir(parents=True, exist_ok=True)
+    desired_paths = {Path(path) for path in fastq_manifest["staged_fastq_path"]}
+
+    if len(fastq_manifest) != len(fastq_rows):
+        raise RuntimeError("fastq manifest rows and source manifest rows diverged during staging")
+
+    for existing_path in staged_root.iterdir():
+        if existing_path in desired_paths:
+            continue
+        if existing_path.is_symlink() or existing_path.is_file():
+            existing_path.unlink()
+            continue
+        raise RuntimeError(f"unexpected non-file entry in staged FASTQ root: {existing_path}")
+
+    for (_, manifest_row), (_, source_row) in zip(fastq_manifest.iterrows(), fastq_rows.iterrows()):
+        target = _symlink_target(source_row)
+        _materialize_staged_symlink(Path(manifest_row["staged_fastq_path"]), target)
 
 
 def _build_study_manifest(
@@ -446,9 +487,7 @@ def build_upstream_pilot_package(
 
     fastq_rows = _study_fastq_rows(study_name, study_runs, manifest)
     fastq_manifest = _build_fastq_manifest(study_name, fastq_rows, pilot_dir)
-    for _, row in fastq_manifest.iterrows():
-        target = _symlink_target(fastq_rows.iloc[_])
-        _materialize_staged_symlink(Path(row["staged_fastq_path"]), target)
+    _sync_staged_fastq_aliases(fastq_manifest, fastq_rows, pilot_dir)
 
     study_manifest = _build_study_manifest(study_name, study_runs, fastq_manifest, study_metadata)
     project_yaml = _build_project_yaml(

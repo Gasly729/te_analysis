@@ -406,11 +406,143 @@ def test_build_upstream_pilot_package_generates_manifests_symlinks_and_config(tm
     staged_links = sorted(result.staged_fastq_root.iterdir())
     assert len(staged_links) == 2
     assert all(path.is_symlink() for path in staged_links)
+    assert [path.name for path in staged_links] == ["SRR1_1.fastq.gz", "SRR2_1.fastq.gz"]
     project_yaml = yaml.safe_load(result.project_yaml_path.read_text(encoding="utf-8"))
     assert sorted(project_yaml["input"]["fastq"].keys()) == ["GSM_RIBO_A"]
     assert sorted(project_yaml["rnaseq"]["fastq"].keys()) == ["GSM_RIBO_A"]
     study_manifest = pd.read_csv(result.study_manifest_path, sep="\t", dtype=str)
     assert set(study_manifest["experiment_alias"]) == {"GSM_RNA_A", "GSM_RIBO_A"}
+    fastq_manifest = pd.read_csv(result.fastq_manifest_path, sep="\t", dtype=str)
+    assert sorted(fastq_manifest["staged_fastq_basename"].tolist()) == ["SRR1_1.fastq.gz", "SRR2_1.fastq.gz"]
+    assert set(fastq_manifest["experiment_alias"]) == {"GSM_RNA_A", "GSM_RIBO_A"}
+    assert set(fastq_manifest["source_path"]) == {str(source_a), str(source_b)}
+
+
+def test_build_upstream_pilot_package_prunes_legacy_gsm_prefixed_aliases(tmp_path: Path) -> None:
+    metadata_rows = [
+        {
+            "experiment_alias": "GSM_RNA_A",
+            "experiment_accession": "SRX_A_RNA",
+            "study_name": "GSE_A",
+            "organism": "Homo sapiens",
+            "corrected_type": "RNA-Seq",
+            "matched_RNA-seq_experiment_alias": "NA",
+            "library_strategy": "RNA-Seq",
+            "library_layout": "SINGLE",
+        },
+        {
+            "experiment_alias": "GSM_RIBO_A",
+            "experiment_accession": "SRX_A_RIBO",
+            "study_name": "GSE_A",
+            "organism": "Homo sapiens",
+            "corrected_type": "Ribo-Seq",
+            "matched_RNA-seq_experiment_alias": "GSM_RNA_A",
+            "library_strategy": "OTHER",
+            "library_layout": "SINGLE",
+        },
+    ]
+    metadata_path = _write_metadata_csv(tmp_path / "raw/metadata.csv", metadata_rows)
+    runs_path = _write_tsv(
+        tmp_path / "raw/metadata_runs.tsv",
+        RESOLVED_COLUMNS,
+        [
+            _resolved_row(
+                run_accession="SRR1",
+                run_accession_prefix="SRR",
+                experiment_accession="SRX_A_RNA",
+                experiment_alias="GSM_RNA_A",
+                study_name="GSE_A",
+                organism="Homo sapiens",
+                corrected_type="RNA-Seq",
+                library_strategy="RNA-Seq",
+                library_layout="SINGLE",
+                resolution_status="resolved",
+                resolution_source="manifest.experiment_alias",
+                manifest_match_status="manifest_present",
+                fastq_presence_status="single_present",
+                source_batches="batch1",
+            ),
+            _resolved_row(
+                run_accession="SRR2",
+                run_accession_prefix="SRR",
+                experiment_accession="SRX_A_RIBO",
+                experiment_alias="GSM_RIBO_A",
+                study_name="GSE_A",
+                organism="Homo sapiens",
+                corrected_type="Ribo-Seq",
+                library_strategy="OTHER",
+                library_layout="SINGLE",
+                resolution_status="resolved",
+                resolution_source="manifest.experiment_alias",
+                manifest_match_status="manifest_present",
+                fastq_presence_status="single_present",
+                source_batches="batch1",
+            ),
+        ],
+    )
+    unresolved_path = _write_tsv(tmp_path / "raw/metadata_runs_unresolved.tsv", UNRESOLVED_COLUMNS, [])
+    source_a, linked_a = _prepare_source_fastq(tmp_path, "GSM_RNA_A_RNA-Seq_SRR1_1.fastq.gz")
+    source_b, linked_b = _prepare_source_fastq(tmp_path, "GSM_RIBO_A_Ribo-Seq_SRR2_1.fastq.gz")
+    manifest_path = _write_manifest(
+        tmp_path / "raw/_manifest.tsv",
+        [
+            {
+                "gsm": "GSM_RNA_A",
+                "gse": "GSE_A",
+                "srr": "SRR1",
+                "mate": "1",
+                "organism_canonical": "Homo_sapiens",
+                "organism_raw": "Homo sapiens",
+                "seq_type": "RNA-Seq",
+                "layout": "SINGLE",
+                "source_batch": "batch1",
+                "source_path": str(source_a),
+                "real_target": str(source_a),
+                "linked_path": str(linked_a),
+                "size_bytes": "5",
+                "mtime_iso": "",
+                "status": "matched",
+                "skip_reason": "",
+                "warning": "single_but_mate_1_only",
+            },
+            {
+                "gsm": "GSM_RIBO_A",
+                "gse": "GSE_A",
+                "srr": "SRR2",
+                "mate": "1",
+                "organism_canonical": "Homo_sapiens",
+                "organism_raw": "Homo sapiens",
+                "seq_type": "Ribo-Seq",
+                "layout": "SINGLE",
+                "source_batch": "batch1",
+                "source_path": str(source_b),
+                "real_target": str(source_b),
+                "linked_path": str(linked_b),
+                "size_bytes": "5",
+                "mtime_iso": "",
+                "status": "matched",
+                "skip_reason": "",
+                "warning": "single_but_mate_1_only",
+            },
+        ],
+    )
+    reference_yaml, template_path = _prepare_reference_and_template(tmp_path)
+    staged_root = tmp_path / "pilot" / "GSE_A" / "staged_fastq"
+    staged_root.mkdir(parents=True, exist_ok=True)
+    (staged_root / "GSM_RIBO_A_Ribo-Seq_SRR2_1.fastq.gz").symlink_to(source_b)
+
+    result = build_upstream_pilot_package(
+        metadata_path=metadata_path,
+        runs_path=runs_path,
+        unresolved_path=unresolved_path,
+        manifest_path=manifest_path,
+        pilot_root=tmp_path / "pilot",
+        reference_yaml_path=reference_yaml,
+        project_template_path=template_path,
+    )
+
+    assert not (result.staged_fastq_root / "GSM_RIBO_A_Ribo-Seq_SRR2_1.fastq.gz").exists()
+    assert (result.staged_fastq_root / "SRR2_1.fastq.gz").is_symlink()
 
 
 def test_unresolved_rows_are_excluded_from_selected_pilot_package(tmp_path: Path) -> None:

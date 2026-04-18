@@ -1,0 +1,6 @@
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz
+data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz

@@ -1,0 +1,1 @@
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate snakemake-ribo && snakemake -n -s /home/xrx/my_project/te_analysis/raw_motheds/snakescale/Snakefile --directory /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/snakescale_dryrun_runtime --cores 1

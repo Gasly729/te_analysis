@@ -1,0 +1,7 @@
+== intended env subset after patch ==
+XDG_CACHE_HOME=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/snakescale_dryrun_runtime/.cache
+TMPDIR=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/snakescale_dryrun_runtime/.tmp
+
+== writable checks ==
+cache writable: yes
+tmp writable: yes

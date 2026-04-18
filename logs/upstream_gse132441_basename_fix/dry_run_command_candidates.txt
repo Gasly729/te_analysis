@@ -1,0 +1,201 @@
+== candidate dry-run commands ==
+tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:2:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+configs/upstream/snakescale.yaml:4:download_enabled: false
+configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:266:logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:267:logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:268:logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:269:logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:270:logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:271:logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:272:logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:273:logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:274:logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:277:logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:278:logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:279:logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:280:logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:281:logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:282:logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:283:logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:284:logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:285:logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:286:logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./logs/upstream_gse132441_basename_fix/discovery.txt:287:configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:288:configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:289:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:290:./configs/upstream/snakescale.yaml:4:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:291:./config/pipeline.defaults.yaml:6:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:292:./configs/pipeline/default.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:293:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./logs/upstream_gse132441_basename_fix/discovery.txt:294:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:266:logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:267:logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:268:logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:269:logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:270:logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:271:logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:272:logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:273:logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:274:logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:277:logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:278:logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:279:logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:280:logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:281:logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:282:logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:283:logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:284:logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:285:logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:286:logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/discovery.txt:287:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:288:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:289:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:290:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:291:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:292:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:293:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/discovery.txt:294:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:2:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:3:./logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:2:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:4:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:5:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:6:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:7:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:8:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:9:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:10:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:11:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:12:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:13:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:14:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:15:./logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:16:./logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:17:./logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:18:./logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:19:./logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:20:./logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:21:./logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:22:./logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:23:./logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:24:./logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:25:./logs/upstream_gse132441_basename_fix/discovery.txt:266:logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:26:./logs/upstream_gse132441_basename_fix/discovery.txt:267:logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:27:./logs/upstream_gse132441_basename_fix/discovery.txt:268:logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:28:./logs/upstream_gse132441_basename_fix/discovery.txt:269:logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:29:./logs/upstream_gse132441_basename_fix/discovery.txt:270:logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:30:./logs/upstream_gse132441_basename_fix/discovery.txt:271:logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:31:./logs/upstream_gse132441_basename_fix/discovery.txt:272:logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:32:./logs/upstream_gse132441_basename_fix/discovery.txt:273:logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:33:./logs/upstream_gse132441_basename_fix/discovery.txt:274:logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:34:./logs/upstream_gse132441_basename_fix/discovery.txt:277:logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:35:./logs/upstream_gse132441_basename_fix/discovery.txt:278:logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:36:./logs/upstream_gse132441_basename_fix/discovery.txt:279:logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:37:./logs/upstream_gse132441_basename_fix/discovery.txt:280:logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:38:./logs/upstream_gse132441_basename_fix/discovery.txt:281:logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:39:./logs/upstream_gse132441_basename_fix/discovery.txt:282:logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:40:./logs/upstream_gse132441_basename_fix/discovery.txt:283:logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:41:./logs/upstream_gse132441_basename_fix/discovery.txt:284:logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:42:./logs/upstream_gse132441_basename_fix/discovery.txt:285:logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:43:./logs/upstream_gse132441_basename_fix/discovery.txt:286:logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:44:./logs/upstream_gse132441_basename_fix/discovery.txt:287:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:45:./logs/upstream_gse132441_basename_fix/discovery.txt:288:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:46:./logs/upstream_gse132441_basename_fix/discovery.txt:289:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:47:./logs/upstream_gse132441_basename_fix/discovery.txt:290:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:48:./logs/upstream_gse132441_basename_fix/discovery.txt:291:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:49:./logs/upstream_gse132441_basename_fix/discovery.txt:292:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:50:./logs/upstream_gse132441_basename_fix/discovery.txt:293:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:51:./logs/upstream_gse132441_basename_fix/discovery.txt:294:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:52:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:53:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:54:logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:55:logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:56:logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:57:logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:58:logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:59:logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:60:logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:61:logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:62:logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:63:logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:64:logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:65:logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:66:logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:67:logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:68:logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:69:logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:70:logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:71:logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:72:logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:73:logs/upstream_gse132441_basename_fix/discovery.txt:266:logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:74:logs/upstream_gse132441_basename_fix/discovery.txt:267:logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:75:logs/upstream_gse132441_basename_fix/discovery.txt:268:logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:76:logs/upstream_gse132441_basename_fix/discovery.txt:269:logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:77:logs/upstream_gse132441_basename_fix/discovery.txt:270:logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:78:logs/upstream_gse132441_basename_fix/discovery.txt:271:logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:79:logs/upstream_gse132441_basename_fix/discovery.txt:272:logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:80:logs/upstream_gse132441_basename_fix/discovery.txt:273:logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:81:logs/upstream_gse132441_basename_fix/discovery.txt:274:logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:82:logs/upstream_gse132441_basename_fix/discovery.txt:277:logs/upstream_gse132441_basename_fix/discovery.txt:254:./logs/upstream_gse132441_basename_fix/discovery.txt:28:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:83:logs/upstream_gse132441_basename_fix/discovery.txt:278:logs/upstream_gse132441_basename_fix/discovery.txt:255:./logs/upstream_gse132441_basename_fix/discovery.txt:30:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:84:logs/upstream_gse132441_basename_fix/discovery.txt:279:logs/upstream_gse132441_basename_fix/discovery.txt:256:./logs/upstream_gse132441_basename_fix/discovery.txt:34:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:85:logs/upstream_gse132441_basename_fix/discovery.txt:280:logs/upstream_gse132441_basename_fix/discovery.txt:257:./logs/upstream_gse132441_basename_fix/discovery.txt:44:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:86:logs/upstream_gse132441_basename_fix/discovery.txt:281:logs/upstream_gse132441_basename_fix/discovery.txt:258:./logs/upstream_gse132441_basename_fix/discovery.txt:47:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:87:logs/upstream_gse132441_basename_fix/discovery.txt:282:logs/upstream_gse132441_basename_fix/discovery.txt:259:./logs/upstream_gse132441_basename_fix/discovery.txt:65:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:88:logs/upstream_gse132441_basename_fix/discovery.txt:283:logs/upstream_gse132441_basename_fix/discovery.txt:260:./logs/upstream_gse132441_basename_fix/discovery.txt:69:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:89:logs/upstream_gse132441_basename_fix/discovery.txt:284:logs/upstream_gse132441_basename_fix/discovery.txt:261:./logs/upstream_gse132441_basename_fix/discovery.txt:86:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:90:logs/upstream_gse132441_basename_fix/discovery.txt:285:logs/upstream_gse132441_basename_fix/discovery.txt:262:./logs/upstream_gse132441_basename_fix/discovery.txt:123:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:91:logs/upstream_gse132441_basename_fix/discovery.txt:286:logs/upstream_gse132441_basename_fix/discovery.txt:263:tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:92:logs/upstream_gse132441_basename_fix/discovery.txt:287:configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:93:logs/upstream_gse132441_basename_fix/discovery.txt:288:configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:94:logs/upstream_gse132441_basename_fix/discovery.txt:289:configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:95:logs/upstream_gse132441_basename_fix/discovery.txt:290:./configs/upstream/snakescale.yaml:4:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:96:logs/upstream_gse132441_basename_fix/discovery.txt:291:./config/pipeline.defaults.yaml:6:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:97:logs/upstream_gse132441_basename_fix/discovery.txt:292:./configs/pipeline/default.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:98:logs/upstream_gse132441_basename_fix/discovery.txt:293:./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+logs/upstream_gse132441_basename_fix/dry_run_command_candidates.txt:99:logs/upstream_gse132441_basename_fix/discovery.txt:294:./tests/test_config_loading.py:13:    assert "download_enabled: false" in text
+./configs/upstream/snakescale.yaml:4:download_enabled: false
+./configs/pipeline/default.yaml:3:download_enabled: false
+./configs/pipeline/local_staged_fastq.yaml:3:download_enabled: false
+./config/pipeline.defaults.yaml:6:download_enabled: false
