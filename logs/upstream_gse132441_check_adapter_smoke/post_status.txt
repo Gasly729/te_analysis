@@ -1,0 +1,38 @@
+== stderr tail ==
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count    min threads    max threads
+-------------  -------  -------------  -------------
+check_adapter        1              1              1
+total                1              1              1
+
+Select jobs to execute...
+
+[Sat Apr 18 10:18:28 2026]
+rule check_adapter:
+    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+    output: adapter_check_output/GSE132441/SRR9257373_cutadapt_stats.tsv
+    jobid: 0
+    reason: Missing output files: adapter_check_output/GSE132441/SRR9257373_cutadapt_stats.tsv
+    wildcards: study=GSE132441, accession=SRR9257373
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/snakescale_dryrun_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+mkdir -p adapter_check_output/GSE132441
+set +o pipefail; zcat /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz | head -n 4000000 | tail -n 100000 - | cutadapt -j 0 -o /dev/null -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40 --minimum-length=15 --quality-cutoff=28 --report=minimal - > adapter_check_output/GSE132441/SRR9257373_cutadapt_stats.tsv 2> /dev/null
+[Sat Apr 18 10:18:31 2026]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: .snakemake/log/2026-04-18T101827.514990.snakemake.log
+
+== stdout tail ==
+
+== output file final status ==
+target_status=produced_nonempty

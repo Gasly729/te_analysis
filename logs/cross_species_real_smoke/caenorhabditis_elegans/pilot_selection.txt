@@ -1,0 +1,6 @@
+chosen_study=GSE48140
+species_subset=Caenorhabditis elegans
+why=study-level mixed species but elegans subset itself is 12 clean resolved samples with 6 ribo + 6 rna and complete pair map
+pairing_cleanliness=6/6 ribo experiments have matched RNA aliases
+local_fastq_availability=12/12 manifest_present + single_present
+unresolved_leakage=0

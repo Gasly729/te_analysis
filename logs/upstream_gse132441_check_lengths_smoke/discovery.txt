@@ -1,0 +1,44 @@
+== locate check_lengths rule ==
+19:ruleorder: download_fastq_files > gzip_fastq > check_adapter > check_adapter_stats > check_lengths > modify_yaml > classify_studies > run_riboflow
+407:rule check_lengths:
+430:            result_dict['lengths']                = dict()
+432:            result_dict['has_all_uneven_lengths'] = False
+442:                # read 1,000 sequences and record their lengths 
+461:                result_dict['lengths'][cur_srr]               = dict()
+462:                result_dict['lengths'][cur_srr]['min_length'] = min(len_set)
+463:                result_dict['lengths'][cur_srr]['max_length'] = max(len_set)
+468:        # if there are cases of uneven read lengths, then all of them need to be uneven and trimmed.
+478:            output_dict['has_all_uneven_lengths'] = True
+487:                output_dict['rnaseq']['has_all_uneven_lengths'] = True
+795:            # load in pre-run check outputs (check_adapter_stats, guess_adapter, check_lengths)
+818:            # set the default values, currently don;t use valid_adapters or valid_lengths
+819:            valid_lengths = True
+834:                # a guessable adapter or a study with uneven lengths (assumed to be a pre-clipped adapter) are both resolvable
+835:                if not length_yaml['has_all_uneven_lengths'] and guess_yaml['consensus_adapter'] is None:
+836:                    message.append("Unable to guess an adapter, and not all experiments have uneven lengths to imply presence of a pre-clipped adapter. This study is invalid.")
+844:            # Check for uneven lengths
+846:                message.append("The following Ribo-Seq files had uneven lengths.")
+850:                if not length_yaml['has_all_uneven_lengths'] and guess_yaml['consensus_adapter'] is None:
+852:                    valid_lengths = False
+854:                    message.append("Not all files had uneven lengths, and there was no consensus guessed adapter. This study is invalid.")
+895:                    message.append("The following RNA-Seq files had uneven lengths.")
+
+== dry-run candidate for check_lengths ==
+8:check_lengths              1              1              1
+18:    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+27:    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+36:    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+45:    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+54:    input: input/project/GSE132441/GSE132441.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz
+62:rule check_lengths:
+63:    input: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257373_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257375_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257377_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257374_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257376_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE132441/staged_fastq/SRR9257378_1.fastq.gz, input/project/GSE132441/GSE132441.yaml
+64:    output: GSE132441_length.yaml
+66:    reason: Missing output files: GSE132441_length.yaml
+72:    input: input/project/GSE132441/GSE132441.yaml, adapter_check_output/GSE132441/SRR9257373_cutadapt_stats.tsv, adapter_check_output/GSE132441/SRR9257375_cutadapt_stats.tsv, adapter_check_output/GSE132441/SRR9257377_cutadapt_stats.tsv, adapter_check_output/GSE132441/SRR9257374_cutadapt_stats.tsv, adapter_check_output/GSE132441/SRR9257376_cutadapt_stats.tsv, adapter_check_output/GSE132441/SRR9257378_cutadapt_stats.tsv
+90:    input: GSE132441_adapter.yaml, GSE132441_length.yaml, GSE132441_guess.yaml, input/project/GSE132441/GSE132441.yaml
+93:    reason: Missing output files: input/modified_project/GSE132441/GSE132441_modified.yaml; Input files updated by another job: GSE132441_adapter.yaml, GSE132441_guess.yaml, GSE132441_length.yaml
+99:    input: GSE132441_adapter.yaml, GSE132441_length.yaml, GSE132441_guess.yaml, input/project/GSE132441/GSE132441.yaml, input/modified_project/GSE132441/GSE132441_modified.yaml
+102:    reason: Missing output files: log/status.txt, log/valid_studies.txt; Input files updated by another job: GSE132441_adapter.yaml, input/modified_project/GSE132441/GSE132441_modified.yaml, GSE132441_guess.yaml, GSE132441_length.yaml
+106:Would remove temporary output GSE132441_length.yaml
+133:check_lengths              1              1              1
+145:        check_adapter, check_adapter_stats, check_lengths, classify_studies, guess_adapter, modify_yaml, run_riboflow

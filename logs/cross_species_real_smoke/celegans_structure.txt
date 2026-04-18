@@ -1,0 +1,123 @@
+=== metadata organisms ===
+experiment_alias                organism corrected_type matched_RNA-seq_experiment_alias
+      GSM1169590  Caenorhabitis brenneri       Ribo-Seq                       GSM1169584
+      GSM1169589  Caenorhabitis brenneri       Ribo-Seq                       GSM1169583
+      GSM1169588  Caenorhabitis brenneri       Ribo-Seq                       GSM1169582
+      GSM1169587  Caenorhabitis brenneri       Ribo-Seq                       GSM1169581
+      GSM1169586  Caenorhabitis brenneri       Ribo-Seq                       GSM1169580
+      GSM1169585  Caenorhabitis brenneri       Ribo-Seq                       GSM1169579
+      GSM1169584  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169583  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169582  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169581  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169580  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169579  Caenorhabitis brenneri        RNA-Seq                               NA
+      GSM1169578  Caenorhabditis remanei       Ribo-Seq                       GSM1169572
+      GSM1169577  Caenorhabditis remanei       Ribo-Seq                       GSM1169571
+      GSM1169576  Caenorhabditis remanei       Ribo-Seq                       GSM1169570
+      GSM1169575  Caenorhabditis remanei       Ribo-Seq                       GSM1169569
+      GSM1169574  Caenorhabditis remanei       Ribo-Seq                       GSM1169568
+      GSM1169573  Caenorhabditis remanei       Ribo-Seq                       GSM1169567
+      GSM1169572  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169571  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169570  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169569  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169568  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169567  Caenorhabditis remanei        RNA-Seq                               NA
+      GSM1169566 Caenorhabditis briggsae       Ribo-Seq                       GSM1169560
+      GSM1169565 Caenorhabditis briggsae       Ribo-Seq                       GSM1169559
+      GSM1169564 Caenorhabditis briggsae       Ribo-Seq                       GSM1169558
+      GSM1169563 Caenorhabditis briggsae       Ribo-Seq                       GSM1169557
+      GSM1169562 Caenorhabditis briggsae       Ribo-Seq                       GSM1169556
+      GSM1169561 Caenorhabditis briggsae       Ribo-Seq                       GSM1169555
+      GSM1169560 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169559 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169558 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169557 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169556 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169555 Caenorhabditis briggsae        RNA-Seq                               NA
+      GSM1169554  Caenorhabditis elegans       Ribo-Seq                       GSM1169548
+      GSM1169553  Caenorhabditis elegans       Ribo-Seq                       GSM1169547
+      GSM1169552  Caenorhabditis elegans       Ribo-Seq                       GSM1169546
+      GSM1169551  Caenorhabditis elegans       Ribo-Seq                       GSM1169545
+      GSM1169550  Caenorhabditis elegans       Ribo-Seq                       GSM1169544
+      GSM1169549  Caenorhabditis elegans       Ribo-Seq                       GSM1169543
+      GSM1169548  Caenorhabditis elegans        RNA-Seq                               NA
+      GSM1169547  Caenorhabditis elegans        RNA-Seq                               NA
+      GSM1169546  Caenorhabditis elegans        RNA-Seq                               NA
+      GSM1169545  Caenorhabditis elegans        RNA-Seq                               NA
+      GSM1169544  Caenorhabditis elegans        RNA-Seq                               NA
+      GSM1169543  Caenorhabditis elegans        RNA-Seq                               NA
+
+=== run organisms ===
+experiment_alias                organism run_accession corrected_type
+      GSM1169590  Caenorhabitis brenneri     SRR914375       Ribo-Seq
+      GSM1169589  Caenorhabitis brenneri     SRR914374       Ribo-Seq
+      GSM1169588  Caenorhabitis brenneri     SRR914373       Ribo-Seq
+      GSM1169587  Caenorhabitis brenneri     SRR914372       Ribo-Seq
+      GSM1169586  Caenorhabitis brenneri     SRR914371       Ribo-Seq
+      GSM1169585  Caenorhabitis brenneri     SRR914370       Ribo-Seq
+      GSM1169584  Caenorhabitis brenneri     SRR914369        RNA-Seq
+      GSM1169583  Caenorhabitis brenneri     SRR914368        RNA-Seq
+      GSM1169582  Caenorhabitis brenneri     SRR914367        RNA-Seq
+      GSM1169581  Caenorhabitis brenneri     SRR914366        RNA-Seq
+      GSM1169580  Caenorhabitis brenneri     SRR914365        RNA-Seq
+      GSM1169579  Caenorhabitis brenneri     SRR914364        RNA-Seq
+      GSM1169578  Caenorhabditis remanei     SRR914363       Ribo-Seq
+      GSM1169577  Caenorhabditis remanei     SRR914362       Ribo-Seq
+      GSM1169576  Caenorhabditis remanei     SRR914361       Ribo-Seq
+      GSM1169575  Caenorhabditis remanei     SRR914360       Ribo-Seq
+      GSM1169574  Caenorhabditis remanei     SRR914359       Ribo-Seq
+      GSM1169573  Caenorhabditis remanei     SRR914358       Ribo-Seq
+      GSM1169572  Caenorhabditis remanei     SRR914357        RNA-Seq
+      GSM1169571  Caenorhabditis remanei     SRR914356        RNA-Seq
+      GSM1169570  Caenorhabditis remanei     SRR914355        RNA-Seq
+      GSM1169569  Caenorhabditis remanei     SRR914354        RNA-Seq
+      GSM1169568  Caenorhabditis remanei     SRR914353        RNA-Seq
+      GSM1169567  Caenorhabditis remanei     SRR914352        RNA-Seq
+      GSM1169566 Caenorhabditis briggsae     SRR914351       Ribo-Seq
+      GSM1169565 Caenorhabditis briggsae     SRR914350       Ribo-Seq
+      GSM1169564 Caenorhabditis briggsae     SRR914349       Ribo-Seq
+      GSM1169563 Caenorhabditis briggsae     SRR914348       Ribo-Seq
+      GSM1169562 Caenorhabditis briggsae     SRR914347       Ribo-Seq
+      GSM1169561 Caenorhabditis briggsae     SRR914346       Ribo-Seq
+      GSM1169560 Caenorhabditis briggsae     SRR914345        RNA-Seq
+      GSM1169559 Caenorhabditis briggsae     SRR914344        RNA-Seq
+      GSM1169558 Caenorhabditis briggsae     SRR914343        RNA-Seq
+      GSM1169557 Caenorhabditis briggsae     SRR914342        RNA-Seq
+      GSM1169556 Caenorhabditis briggsae     SRR914341        RNA-Seq
+      GSM1169555 Caenorhabditis briggsae     SRR914340        RNA-Seq
+      GSM1169554  Caenorhabditis elegans     SRR914339       Ribo-Seq
+      GSM1169553  Caenorhabditis elegans     SRR914338       Ribo-Seq
+      GSM1169552  Caenorhabditis elegans     SRR914337       Ribo-Seq
+      GSM1169551  Caenorhabditis elegans     SRR914336       Ribo-Seq
+      GSM1169550  Caenorhabditis elegans     SRR914335       Ribo-Seq
+      GSM1169549  Caenorhabditis elegans     SRR914334       Ribo-Seq
+      GSM1169548  Caenorhabditis elegans     SRR914333        RNA-Seq
+      GSM1169547  Caenorhabditis elegans     SRR914332        RNA-Seq
+      GSM1169546  Caenorhabditis elegans     SRR914331        RNA-Seq
+      GSM1169545  Caenorhabditis elegans     SRR914330        RNA-Seq
+      GSM1169544  Caenorhabditis elegans     SRR914329        RNA-Seq
+      GSM1169543  Caenorhabditis elegans     SRR914328        RNA-Seq
+
+=== organism counts in metadata ===
+organism
+Caenorhabditis briggsae    12
+Caenorhabditis elegans     12
+Caenorhabditis remanei     12
+Caenorhabitis brenneri     12
+
+=== pair coverage within C elegans ===
+experiment_alias corrected_type matched_RNA-seq_experiment_alias
+      GSM1169554       Ribo-Seq                       GSM1169548
+      GSM1169553       Ribo-Seq                       GSM1169547
+      GSM1169552       Ribo-Seq                       GSM1169546
+      GSM1169551       Ribo-Seq                       GSM1169545
+      GSM1169550       Ribo-Seq                       GSM1169544
+      GSM1169549       Ribo-Seq                       GSM1169543
+      GSM1169548        RNA-Seq                               NA
+      GSM1169547        RNA-Seq                               NA
+      GSM1169546        RNA-Seq                               NA
+      GSM1169545        RNA-Seq                               NA
+      GSM1169544        RNA-Seq                               NA
+      GSM1169543        RNA-Seq                               NA

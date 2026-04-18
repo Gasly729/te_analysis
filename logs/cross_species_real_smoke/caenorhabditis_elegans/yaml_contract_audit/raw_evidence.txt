@@ -1,0 +1,198 @@
+== modification.yaml ==
+adapter_check:
+  has_low_adapter: true
+  initial_clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  low_adapter_files:
+  - SRR914336
+  - SRR914338
+  - SRR914337
+  - SRR914334
+  - SRR914339
+  - SRR914335
+  rnaseq:
+    clip_arguments: -u 1 --quality-cutoff=28
+    has_rnaseq_adapter: false
+    initial_clip_arguments: -u 1 --quality-cutoff=28
+    low_adapter_files:
+    - SRR914331
+    - SRR914333
+    - SRR914330
+    - SRR914329
+    - SRR914332
+    - SRR914328
+adapter_guess:
+  GSM1169549:
+    SRR914334: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169550:
+    SRR914335: null
+  GSM1169551:
+    SRR914336: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169552:
+    SRR914337: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169553:
+    SRR914338: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169554:
+    SRR914339: null
+  consensus_adapter: null
+  detected_adapters:
+  - AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  - null
+  has_multiple_adapters: true
+  rnaseq:
+    GSM1169549:
+      SRR914328: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169550:
+      SRR914329: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169551:
+      SRR914330: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169552:
+      SRR914331: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169553:
+      SRR914332: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169554:
+      SRR914333: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    consensus_adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    detected_adapters:
+    - AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    has_multiple_adapters: false
+length_check:
+  clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  has_all_uneven_lengths: false
+  initial_clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  lengths:
+    SRR914334:
+      max_length: 50
+      min_length: 50
+    SRR914335:
+      max_length: 36
+      min_length: 36
+    SRR914336:
+      max_length: 50
+      min_length: 50
+    SRR914337:
+      max_length: 50
+      min_length: 50
+    SRR914338:
+      max_length: 50
+      min_length: 50
+    SRR914339:
+      max_length: 36
+      min_length: 36
+  rnaseq:
+    clip_arguments: -u 1 --quality-cutoff=28
+    has_all_uneven_lengths: false
+    initial_clip_arguments: -u 1 --quality-cutoff=28
+    lengths:
+      SRR914328:
+        max_length: 50
+        min_length: 50
+      SRR914329:
+        max_length: 75
+        min_length: 75
+      SRR914330:
+        max_length: 50
+        min_length: 50
+      SRR914331:
+        max_length: 50
+        min_length: 50
+      SRR914332:
+        max_length: 50
+        min_length: 50
+      SRR914333:
+        max_length: 50
+        min_length: 50
+    uneven_files: []
+  uneven_files: []
+
+== final modified yaml ==
+alignment_arguments:
+  filter: -L 15 --no-unal
+  genome: --no-unal -k 1
+  transcriptome: -L 15 --no-unal
+clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+  --minimum-length=15 --quality-cutoff=28
+deduplicate: false
+do_check_file_existence: true
+do_fastqc: true
+do_metadata: false
+do_rnaseq: true
+input:
+  fastq:
+    GSM1169549:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz
+    GSM1169550:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz
+    GSM1169551:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz
+    GSM1169552:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz
+    GSM1169553:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz
+    GSM1169554:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz
+  fastq_base: ''
+  metadata:
+    base: ''
+    files: null
+  reference:
+    filter: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/filter/celegans/celegans_rRNA_new*
+    regions: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_actual_regions_new.bed
+    transcript_lengths: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_transcript_lengths_new.tsv
+    transcriptome: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_new*
+  root_meta: ./input/modified_project/GSE48140/GSE48140_modified.yaml
+mapping_quality_cutoff: 20
+output:
+  individual_lane_directory: individual
+  intermediates:
+    alignment_ribo: alignment_ribo
+    bam_to_bed: bam_to_bed
+    base: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/intermediates/GSE48140
+    clip: clip
+    filter: filter
+    genome_alignment: genome_alignment
+    log: log
+    quality_filter: quality_filter
+    transcriptome_alignment: transcriptome_alignment
+  merged_lane_directory: merged
+  output:
+    base: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/output/GSE48140
+    fastqc: fastqc
+    log: log
+    ribo: ribo
+ribo:
+  coverage: true
+  left_span: 35
+  metagene_radius: 50
+  read_length:
+    max: 40
+    min: 15
+  ref_name: appris-v1
+  right_span: 10
+rnaseq:
+  bt2_argumments: -L 15  --no-unal
+  clip_arguments: -u 1 --quality-cutoff=28 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  deduplicate: false
+  fastq:
+    GSM1169549:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz
+    GSM1169550:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz
+    GSM1169551:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz
+    GSM1169552:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz
+    GSM1169553:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz
+    GSM1169554:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+  fastq_base: ''
+  filter_arguments: -L 15 --no-unal
+
+== check_adapter example ==
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	25000	900000	6	0	0	7	7	997	215
+
+== length yaml ==

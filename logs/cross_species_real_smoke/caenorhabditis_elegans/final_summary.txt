@@ -1,0 +1,478 @@
+== adapter target ==
+-rw-r--r-- 1 xrx xrx 126 Apr 18 10:52 /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/adapter_check_output/GSE48140/SRR914339_cutadapt_stats.tsv
+
+== adapter preview ==
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	25000	900000	6	0	0	7	7	997	215
+
+== stderr tail ==
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count    min threads    max threads
+-------------  -------  -------------  -------------
+check_adapter        1              1              1
+total                1              1              1
+
+Select jobs to execute...
+
+[Sat Apr 18 10:52:27 2026]
+rule check_adapter:
+    input: input/project/GSE48140/GSE48140.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+    output: adapter_check_output/GSE48140/SRR914339_cutadapt_stats.tsv
+    jobid: 0
+    reason: Missing output files: adapter_check_output/GSE48140/SRR914339_cutadapt_stats.tsv
+    wildcards: study=GSE48140, accession=SRR914339
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+mkdir -p adapter_check_output/GSE48140
+set +o pipefail; zcat /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz | head -n 4000000 | tail -n 100000 - | cutadapt -j 0 -o /dev/null -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40 --minimum-length=15 --quality-cutoff=28 --report=minimal - > adapter_check_output/GSE48140/SRR914339_cutadapt_stats.tsv 2> /dev/null
+[Sat Apr 18 10:52:29 2026]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: .snakemake/log/2026-04-18T105226.755776.snakemake.log
+
+== stdout tail ==
+== check_lengths target ==
+-rw-r--r-- 1 xrx xrx 1.2K Apr 18 10:52 /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/GSE48140_length.yaml
+
+== check_lengths preview ==
+clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+  --minimum-length=15 --quality-cutoff=28
+has_all_uneven_lengths: false
+initial_clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+  --minimum-length=15 --quality-cutoff=28
+lengths:
+  SRR914334:
+    max_length: 50
+    min_length: 50
+  SRR914335:
+    max_length: 36
+    min_length: 36
+  SRR914336:
+    max_length: 50
+    min_length: 50
+  SRR914337:
+    max_length: 50
+    min_length: 50
+  SRR914338:
+    max_length: 50
+    min_length: 50
+  SRR914339:
+    max_length: 36
+    min_length: 36
+rnaseq:
+  clip_arguments: -u 1 --quality-cutoff=28
+  has_all_uneven_lengths: false
+  initial_clip_arguments: -u 1 --quality-cutoff=28
+  lengths:
+    SRR914328:
+      max_length: 50
+      min_length: 50
+    SRR914329:
+      max_length: 75
+      min_length: 75
+    SRR914330:
+      max_length: 50
+      min_length: 50
+    SRR914331:
+      max_length: 50
+
+== check_lengths tail ==
+  SRR914335:
+    max_length: 36
+    min_length: 36
+  SRR914336:
+    max_length: 50
+    min_length: 50
+  SRR914337:
+    max_length: 50
+    min_length: 50
+  SRR914338:
+    max_length: 50
+    min_length: 50
+  SRR914339:
+    max_length: 36
+    min_length: 36
+rnaseq:
+  clip_arguments: -u 1 --quality-cutoff=28
+  has_all_uneven_lengths: false
+  initial_clip_arguments: -u 1 --quality-cutoff=28
+  lengths:
+    SRR914328:
+      max_length: 50
+      min_length: 50
+    SRR914329:
+      max_length: 75
+      min_length: 75
+    SRR914330:
+      max_length: 50
+      min_length: 50
+    SRR914331:
+      max_length: 50
+      min_length: 50
+    SRR914332:
+      max_length: 50
+      min_length: 50
+    SRR914333:
+      max_length: 50
+      min_length: 50
+  uneven_files: []
+uneven_files: []
+
+== stderr tail ==
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count    min threads    max threads
+-------------  -------  -------------  -------------
+check_lengths        1              1              1
+total                1              1              1
+
+Select jobs to execute...
+
+[Sat Apr 18 10:52:49 2026]
+rule check_lengths:
+    input: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz, input/project/GSE48140/GSE48140.yaml
+    output: GSE48140_length.yaml
+    jobid: 0
+    reason: Missing output files: GSE48140_length.yaml
+    wildcards: study=GSE48140
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+[Sat Apr 18 10:52:50 2026]
+Finished job 0.
+1 of 1 steps (100%) done
+Complete log: .snakemake/log/2026-04-18T105248.645555.snakemake.log
+
+== stdout tail ==
+== yaml target ==
+-rw-r--r-- 1 xrx xrx 3.5K Apr 18 10:54 /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/input/modified_project/GSE48140/GSE48140_modified.yaml
+
+== yaml head ==
+alignment_arguments:
+  filter: -L 15 --no-unal
+  genome: --no-unal -k 1
+  transcriptome: -L 15 --no-unal
+clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+  --minimum-length=15 --quality-cutoff=28
+deduplicate: false
+do_check_file_existence: true
+do_fastqc: true
+do_metadata: false
+do_rnaseq: true
+input:
+  fastq:
+    GSM1169549:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz
+    GSM1169550:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz
+    GSM1169551:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz
+    GSM1169552:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz
+    GSM1169553:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz
+    GSM1169554:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz
+  fastq_base: ''
+  metadata:
+    base: ''
+    files: null
+  reference:
+    filter: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/filter/celegans/celegans_rRNA_new*
+    regions: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_actual_regions_new.bed
+    transcript_lengths: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_transcript_lengths_new.tsv
+    transcriptome: /home/xrx/my_project/te_analysis/raw_motheds/snakescale/reference/transcriptome/celegans/appris_celegans_v1_new*
+  root_meta: ./input/modified_project/GSE48140/GSE48140_modified.yaml
+mapping_quality_cutoff: 20
+output:
+  individual_lane_directory: individual
+  intermediates:
+    alignment_ribo: alignment_ribo
+    bam_to_bed: bam_to_bed
+    base: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/intermediates/GSE48140
+    clip: clip
+    filter: filter
+    genome_alignment: genome_alignment
+    log: log
+    quality_filter: quality_filter
+    transcriptome_alignment: transcriptome_alignment
+  merged_lane_directory: merged
+  output:
+    base: /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/output/GSE48140
+    fastqc: fastqc
+    log: log
+    ribo: ribo
+ribo:
+  coverage: true
+  left_span: 35
+  metagene_radius: 50
+  read_length:
+    max: 40
+    min: 15
+  ref_name: appris-v1
+  right_span: 10
+rnaseq:
+  bt2_argumments: -L 15  --no-unal
+  clip_arguments: -u 1 --quality-cutoff=28 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  deduplicate: false
+  fastq:
+    GSM1169549:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz
+    GSM1169550:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz
+    GSM1169551:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz
+    GSM1169552:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz
+    GSM1169553:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz
+    GSM1169554:
+    - /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+
+== modifications head ==
+adapter_check:
+  has_low_adapter: true
+  initial_clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  low_adapter_files:
+  - SRR914336
+  - SRR914338
+  - SRR914337
+  - SRR914334
+  - SRR914339
+  - SRR914335
+  rnaseq:
+    clip_arguments: -u 1 --quality-cutoff=28
+    has_rnaseq_adapter: false
+    initial_clip_arguments: -u 1 --quality-cutoff=28
+    low_adapter_files:
+    - SRR914331
+    - SRR914333
+    - SRR914330
+    - SRR914329
+    - SRR914332
+    - SRR914328
+adapter_guess:
+  GSM1169549:
+    SRR914334: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169550:
+    SRR914335: null
+  GSM1169551:
+    SRR914336: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169552:
+    SRR914337: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169553:
+    SRR914338: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  GSM1169554:
+    SRR914339: null
+  consensus_adapter: null
+  detected_adapters:
+  - AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+  - null
+  has_multiple_adapters: true
+  rnaseq:
+    GSM1169549:
+      SRR914328: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169550:
+      SRR914329: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169551:
+      SRR914330: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169552:
+      SRR914331: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169553:
+      SRR914332: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    GSM1169554:
+      SRR914333: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    consensus_adapter: AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    detected_adapters:
+    - AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+    has_multiple_adapters: false
+length_check:
+  clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  has_all_uneven_lengths: false
+  initial_clip_arguments: -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40
+    --minimum-length=15 --quality-cutoff=28
+  lengths:
+    SRR914334:
+      max_length: 50
+      min_length: 50
+    SRR914335:
+      max_length: 36
+      min_length: 36
+    SRR914336:
+      max_length: 50
+      min_length: 50
+    SRR914337:
+      max_length: 50
+      min_length: 50
+    SRR914338:
+      max_length: 50
+      min_length: 50
+    SRR914339:
+
+== stderr tail ==
+    input: input/project/GSE48140/GSE48140.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+    output: adapter_check_output/GSE48140/SRR914333_cutadapt_stats.tsv
+    jobid: 37
+    reason: Missing output files: adapter_check_output/GSE48140/SRR914333_cutadapt_stats.tsv
+    wildcards: study=GSE48140, accession=SRR914333
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+mkdir -p adapter_check_output/GSE48140
+set +o pipefail; zcat /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz | head -n 4000000 | tail -n 100000 - | cutadapt -j 0 -o /dev/null -u 1 --quality-cutoff=28 --report=minimal - > adapter_check_output/GSE48140/SRR914333_cutadapt_stats.tsv 2> /dev/null
+[Sat Apr 18 10:53:41 2026]
+Finished job 37.
+9 of 14 steps (64%) done
+Select jobs to execute...
+
+[Sat Apr 18 10:53:41 2026]
+rule check_adapter:
+    input: input/project/GSE48140/GSE48140.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+    output: adapter_check_output/GSE48140/SRR914331_cutadapt_stats.tsv
+    jobid: 35
+    reason: Missing output files: adapter_check_output/GSE48140/SRR914331_cutadapt_stats.tsv
+    wildcards: study=GSE48140, accession=SRR914331
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+mkdir -p adapter_check_output/GSE48140
+set +o pipefail; zcat /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz | head -n 4000000 | tail -n 100000 - | cutadapt -j 0 -o /dev/null -u 1 --quality-cutoff=28 --report=minimal - > adapter_check_output/GSE48140/SRR914331_cutadapt_stats.tsv 2> /dev/null
+[Sat Apr 18 10:53:44 2026]
+Finished job 35.
+10 of 14 steps (71%) done
+Select jobs to execute...
+
+[Sat Apr 18 10:53:44 2026]
+rule check_adapter:
+    input: input/project/GSE48140/GSE48140.yaml, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914334_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914335_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914337_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914338_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914339_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914328_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914329_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914330_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914331_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914332_1.fastq.gz, /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914333_1.fastq.gz
+    output: adapter_check_output/GSE48140/SRR914336_cutadapt_stats.tsv
+    jobid: 28
+    reason: Missing output files: adapter_check_output/GSE48140/SRR914336_cutadapt_stats.tsv
+    wildcards: study=GSE48140, accession=SRR914336
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+mkdir -p adapter_check_output/GSE48140
+set +o pipefail; zcat /home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/staged_fastq/SRR914336_1.fastq.gz | head -n 4000000 | tail -n 100000 - | cutadapt -j 0 -o /dev/null -u 1 -a CTGTAGGCACCATCAAT --overlap=4 --trimmed-only --maximum-length=40 --minimum-length=15 --quality-cutoff=28 --report=minimal - > adapter_check_output/GSE48140/SRR914336_cutadapt_stats.tsv 2> /dev/null
+[Sat Apr 18 10:53:46 2026]
+Finished job 28.
+11 of 14 steps (79%) done
+Select jobs to execute...
+
+[Sat Apr 18 10:53:46 2026]
+rule check_adapter_stats:
+    input: input/project/GSE48140/GSE48140.yaml, adapter_check_output/GSE48140/SRR914334_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914335_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914336_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914337_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914338_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914339_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914328_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914329_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914330_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914331_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914332_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914333_cutadapt_stats.tsv
+    output: GSE48140_adapter.yaml
+    jobid: 1
+    reason: Missing output files: GSE48140_adapter.yaml; Input files updated by another job: adapter_check_output/GSE48140/SRR914332_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914337_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914334_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914338_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914336_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914328_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914330_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914333_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914331_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914335_cutadapt_stats.tsv, adapter_check_output/GSE48140/SRR914329_cutadapt_stats.tsv
+    wildcards: study=GSE48140
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+[Sat Apr 18 10:53:48 2026]
+Finished job 1.
+12 of 14 steps (86%) done
+Select jobs to execute...
+
+[Sat Apr 18 10:53:48 2026]
+rule guess_adapter:
+    input: input/project/GSE48140/GSE48140.yaml, GSE48140_adapter.yaml
+    output: GSE48140_guess.yaml
+    jobid: 39
+    reason: Missing output files: GSE48140_guess.yaml; Input files updated by another job: GSE48140_adapter.yaml
+    wildcards: study=GSE48140
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+[Sat Apr 18 10:54:54 2026]
+Finished job 39.
+13 of 14 steps (93%) done
+Select jobs to execute...
+
+[Sat Apr 18 10:54:54 2026]
+rule modify_yaml:
+    input: GSE48140_adapter.yaml, GSE48140_length.yaml, GSE48140_guess.yaml, input/project/GSE48140/GSE48140.yaml
+    output: input/modified_project/GSE48140/GSE48140_modified.yaml, modifications/GSE48140/modification.yaml
+    jobid: 0
+    reason: Missing output files: input/modified_project/GSE48140/GSE48140_modified.yaml; Input files updated by another job: GSE48140_guess.yaml, GSE48140_adapter.yaml
+    wildcards: study=GSE48140
+    resources: tmpdir=/home/xrx/my_project/te_analysis/data/upstream/pilot/GSE48140_celegans/snakescale_runtime/.tmp
+
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Select jobs to execute...
+[Sat Apr 18 10:54:55 2026]
+Finished job 0.
+14 of 14 steps (100%) done
+Removing temporary output GSE48140_adapter.yaml.
+Removing temporary output GSE48140_length.yaml.
+Removing temporary output GSE48140_guess.yaml.
+Complete log: .snakemake/log/2026-04-18T105314.802550.snakemake.log
+
+== stdout tail ==
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 5.4
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 0.1
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 4.4
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 5.4
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 4.3
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 0.1
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 6.1
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 3.2
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 4.5
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 6.5
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 5.6
+Percentage of Reads with Adapters (%): 0.0
+Percentage of Base Pairs that were Quality Trimmed (%): 4.5
+Failed to find the anchor sequence with length 10. Found "AGATCG" length = 6
+Failed to find the anchor sequence with length 10. Found "AGATCG" length = 6
