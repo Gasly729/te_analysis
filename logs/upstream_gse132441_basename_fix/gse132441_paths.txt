@@ -1,2 +1,0 @@
-./data/upstream/pilot/GSE132441/staged_fastq
-./data/upstream/pilot/GSE132441/fastq_manifest.tsv

@@ -1,6 +1,0 @@
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863556_Ribo-Seq_SRR9257373_1.fastq.gz
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863557_RNA-Seq_SRR9257374_1.fastq.gz
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863558_Ribo-Seq_SRR9257375_1.fastq.gz
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863560_RNA-Seq_SRR9257376_1.fastq.gz
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863561_Ribo-Seq_SRR9257377_1.fastq.gz
-data/upstream/pilot/GSE132441/staged_fastq/GSM3863562_RNA-Seq_SRR9257378_1.fastq.gz
