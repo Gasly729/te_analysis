@@ -201,12 +201,3 @@ cython_debug/
 /data/scratch/
 /data/ribo/
 /data/qc/
-
-# Runtime logs
-/logs/
-*.out
-*.err
-*.stdout
-*.stderr
-*.trace
-*.pid
