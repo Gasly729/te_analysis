@@ -1,0 +1,14 @@
+name: te-analysis
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pandas>=2.0
+  - pyyaml>=6.0
+  # TODO(T0): confirm snakemake vs nextflow from vendor_contracts.md
+  - snakemake
+  # - nextflow
+  - pip
+  - pip:
+    - pytest>=7.0

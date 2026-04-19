@@ -1,5 +1,5 @@
-"""Formal runtime architecture skeleton for the rebuilt TE-only pipeline.
+"""te_analysis — CCDS wrapper over RiboBase/snakescale + CenikLab/TE_model.
 
-This package is the new local wrapper surface under `src/`.
-It defines contracts, stage models, and wrapper boundaries only.
+Responsibility boundary: "metadata -> snakescale inputs + product marshalling".
+Full contract: te_analysis_module_contracts_v1.md (outside this repo).
 """

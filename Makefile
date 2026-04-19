@@ -1,83 +1,40 @@
-#################################################################################
-# GLOBALS                                                                       #
-#################################################################################
+# te_analysis unified entry
+# Target contract: te_analysis_module_contracts_v1.md §M5.
+# All business targets `@false` until their task (T4/T5/T6) is done.
 
-PROJECT_NAME = te_analysis
-PYTHON_VERSION = 3.12
-PYTHON_INTERPRETER = python
+STUDY ?=
 
-#################################################################################
-# COMMANDS                                                                      #
-#################################################################################
-
-
-## Install Python dependencies
-.PHONY: requirements
-requirements:
-	pixi install
-
-
-
-
-## Delete all compiled Python files
-.PHONY: clean
-clean:
-	find . -type f -name "*.py[co]" -delete
-	find . -type d -name "__pycache__" -delete
-
-
-## Lint using ruff (use `make format` to do formatting)
-.PHONY: lint
-lint:
-	ruff format --check
-	ruff check
-
-## Format source code with ruff
-.PHONY: format
-format:
-	ruff check --fix
-	ruff format
-
-
-
-
-
-## Set up Python interpreter environment
-.PHONY: create_environment
-create_environment:
-	
-	@echo ">>> Pixi environment will be created when running 'make requirements'"
-	
-	@echo ">>> Activate with:\npixi shell"
-	
-
-
-
-#################################################################################
-# PROJECT RULES                                                                 #
-#################################################################################
-
-
-## Make dataset
-.PHONY: data
-data: requirements
-	$(PYTHON_INTERPRETER) te_analysis/dataset.py
-
-
-#################################################################################
-# Self Documenting Commands                                                     #
-#################################################################################
-
-.DEFAULT_GOAL := help
-
-define PRINT_HELP_PYSCRIPT
-import re, sys; \
-lines = '\n'.join([line for line in sys.stdin]); \
-matches = re.findall(r'\n## (.*)\n[\s\S]+?\n([a-zA-Z_-]+):', lines); \
-print('Available rules:\n'); \
-print('\n'.join(['{:25}{}'.format(*reversed(match)) for match in matches]))
-endef
-export PRINT_HELP_PYSCRIPT
+.PHONY: help env submodules stage upstream downstream all clean
 
 help:
-	@$(PYTHON_INTERPRETER) -c "${PRINT_HELP_PYSCRIPT}" < $(MAKEFILE_LIST)
+	@echo "make env                     # create conda env"
+	@echo "make submodules              # init vendor/ submodules"
+	@echo "make stage      STUDY=<GSE>  # TODO(T4)"
+	@echo "make upstream   STUDY=<GSE>  # TODO(T5) depends on stage"
+	@echo "make downstream STUDY=<GSE>  # TODO(T6) depends on upstream"
+	@echo "make all        STUDY=<GSE>  # alias for downstream"
+	@echo "make clean      STUDY=<GSE>  # remove interim/processed for STUDY"
+
+env:
+	conda env create -f environment.yml
+
+submodules:
+	git submodule update --init --recursive
+
+stage:
+	@echo "TODO(T4): stage_inputs not implemented yet" >&2
+	@false
+
+upstream: stage
+	@echo "TODO(T5): run_upstream not implemented yet" >&2
+	@false
+
+downstream: upstream
+	@echo "TODO(T6): run_downstream not implemented yet" >&2
+	@false
+
+all: downstream
+
+clean:
+	@echo "TODO(T7): clean STUDY=$(STUDY) not implemented yet" >&2
+	@false

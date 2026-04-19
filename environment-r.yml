@@ -1,0 +1,7 @@
+name: te-analysis-r
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base>=4.2
+  # TODO(T0): enumerate TE_model DESCRIPTION packages
