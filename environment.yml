@@ -13,3 +13,7 @@ dependencies:
   - pip:
     - pytest>=7.0
     - pysradb>=2.0
+    # TE_model runtime deps (vendor/TE_model/src/*.py imports)
+    - ribopy>=0.0.1
+    - bioinfokit>=2.1
+    - biopython>=1.80
