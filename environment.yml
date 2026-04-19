@@ -12,3 +12,4 @@ dependencies:
   - pip
   - pip:
     - pytest>=7.0
+    - pysradb>=2.0
