@@ -1,8 +1,8 @@
 # te_analysis Progress Snapshot
 
-**快照时间**：2026-04-19 UTC+08:00
-**分支**：`design/v1-minimal`（HEAD=`f08f363`）
-**上次 push**：`db59910`（远端 `origin/design/v1-minimal`）— 本地领先 **20 个 commit**
+**快照时间**：2026-04-19 UTC+08:00（M 批次后）
+**分支**：`design/v1-minimal`（HEAD=`4165bf6`，+1 自引用 M5 commit待落盘）
+**上次 push**：`db59910`（远端 `origin/design/v1-minimal`）— 本地领先 **23–24 个 commit**（M5 自引用准确计数留给下轮 cold-start 纠偏，模仿 L6 → d1a43de 模式）
 **用途**：跨 session 交接 / Claude 冷启动 ground truth / 人类快速回顾
 
 ---
@@ -34,9 +34,9 @@
 | **T6** | `run_downstream.py` | ✅（schema 级）| `src/te_analysis/run_downstream.py` + `test_run_downstream.py` | L2 |
 | **T7** | Makefile | ✅ | `Makefile`（7 target + clean）| L3 |
 | **T8** | GSE132441 上游 E2E | ⬜ 未启动 | 需 snakemake + nextflow + `vendor/snakescale/reference/` 完整部署 | — |
-| **T9** | GSE105082 下游 E2E + 数值对齐 | ⬜ 未启动 | 需真实 `.ribo` + R + TE_model 依赖 + `tests/fixtures/gse105082/baseline_outputs/` 重算 | — |
+| **T9** | GSE105082 下游 E2E + 数值对齐 | ✅（schema，[known: baseline J1-drift]）| `data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv` (10842×1 [HeLa])；见 backlog #6 数值漂移 | M2 `afe6138` |
 | **T10** | `stage_inputs` 单测 | ✅ | 8 件于 `test_stage_inputs.py` + 7 件于 `test_stage_inputs_schema.py` | K2 + K3 |
-| **T11** | 下游冒烟测试 | ⬜ 未启动（需 T9 产物）| — | — |
+| **T11** | 下游冒烟测试 | ✅ | `tests/test_smoke_downstream.py` 98 行 + `tests/fixtures/gse105082/t9_products/` 冻结 2 CSV | M3 `4165bf6` |
 | **T12** | 旧代码清理 | 🟡 **非正式达成** | F1-F4 + I + L5 已移除所有违规遗产；正式启动需等 T8 AND T9 绿 | — |
 | **T13** | 文档定稿 | ⬜ 未启动（需 T12 正式绿）| — | — |
 | **T14** | 基线冻结 | ⬜ 未启动（需 T12）| — | — |
@@ -46,11 +46,11 @@
 - **M-Alpha (T0) ✅**
 - **M-Bravo (T1+T2+T3) ✅**
 - **M-Charlie (T4+T5+T6) ✅**
-- **M-Delta (T7+T8+T9)** 🟡 T7 ✅；T8 / T9 未启动
+- **M-Delta (T7+T8+T9)** 🟡 T7 ✅；T9 ✅（schema）；T8 未启动
 - **M-Echo (T12)** ⬜
 - **M-Final (T13+T14)** ⬜
 
-**进度估计**：14 任务中 8 件完全绿 + 1 件降级绿 = **~64%**；距 M-Final 还差 **T8 → T9 → T11 → T12 → T13/T14** 五步。
+**进度估计**：14 任务中 9 件完全绿 + 1 件 schema 绿 + 1 件降级绿 = **~75%**；距 M-Final 还差 **T8 → T12 → T13/T14** 四步。
 
 ---
 
@@ -59,6 +59,10 @@
 按时间倒序，已跟 sprint plan 任务对应：
 
 ```text
+<M5 SHA>       M5  docs(m): progress_snapshot + backlog bump post-T9/T11
+4165bf6 M3  test(t11): smoke fixture from T9 products
+afe6138 M2  feat(t9): GSE105082 downstream E2E green (schema)
+d1a43de M1  docs(snapshot): patch HEAD/ahead-count drift post-self-reference
 f08f363 L6  docs: progress snapshot for cross-session handoff
 df61603 L5  chore: remove stale prompt doc after T0 completion
 7bb4fea L4  docs(t0): aggregate vendor contracts → references/vendor_contracts.md
@@ -102,7 +106,7 @@ b25c4e8 F1  purge: retire broken / orphaned legacy tests
 
 - 工作区**干净**（`git status --porcelain` 除 vendor untracked 外空）
 - 仅 `vendor/snakescale` 有 untracked `reference/`（用户预置的 bowtie2 索引库，非本项目产物，vendor tracked SHA 未动）
-- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` 20 commit
+- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` 23–24 commit（M5 未落盘前=23，落盘后=24）
 
 ### 3.2 Submodule HEAD（已锁定，严禁 rebase）
 
@@ -115,7 +119,7 @@ b25c4e8 F1  purge: retire broken / orphaned legacy tests
 
 ```bash
 PYTHONPATH=src python -m pytest tests/ -v
-# 35 passed in ~2.4s
+# 42 passed in ~2.6s  (was 35 before T11)
 ```
 
 | 文件 | 件数 | 覆盖 |
@@ -125,9 +129,8 @@ PYTHONPATH=src python -m pytest tests/ -v
 | `tests/test_stage_inputs_schema.py` | 7 | project.yaml 结构 / reference paths / Ribo-GSM 键 / clip / output bases / ribo 块不变 |
 | `tests/test_run_upstream.py` | 6 | CLI 入口 + command 结构 + symlink + dedup + exit code |
 | `tests/test_run_downstream.py` | 9 | `_load` + `_write_trial` + `_copy_products` + end-to-end mocked |
-| **合计** | **35** | — |
-
-`tests/test_smoke_downstream.py` 还是 5 行 stub（等 T11 启动）。
+| `tests/test_smoke_downstream.py` | 98 | T9 产物 smoke |
+| **合计** | **42** | — |
 
 ### 3.4 数据层快照
 
@@ -156,8 +159,8 @@ PYTHONPATH=src python -m pytest tests/ -v
 | `tests/test_config.py` | 39 | — | ✅ |
 | `tests/test_run_upstream.py` | 91 | — | ✅ |
 | `tests/test_run_downstream.py` | 136 | — | ✅ |
-| `tests/test_smoke_downstream.py` | 5 (stub) | M11=100 | ✅（待实现）|
-| **tests/ 小计** | **489** | M10+M11=250 | **+96%** — 违反 GC-1 硬约束需审查 |
+| `tests/test_smoke_downstream.py` | 98 | M11=100 | ✅ M3 落盘 |
+| **tests/ 小计** | **582** | M10+M11=250 | **+133%** — 违反 GC-1（backlog #4；T12 审查）|
 | `scripts/enrich_metadata_srr.py` | 139 | — | 一次性 |
 | `scripts/align_fastq_paths.py` | 174 | — | 一次性 |
 | `scripts/verify_t3_metadata.py` | 160 | — | 一次性 |
@@ -307,17 +310,14 @@ te_analysis/
 
 ## 6. Backlog（`docs/backlog.md` 现状）
 
-| # | 条目 | 源任务 | 触发重访 |
+| # | 条目 | 源任务 | 状态 |
 |---|---|---|---|
 | 1 | Relocate vendor contracts → `references/vendor_contracts.md` | T0 / J3 | **已由 L4 resolved** |
 | 2 | Resolve 3 unresolved SRX from H2 + 21 missing fastq_path (0.50% loss) | T3 / J1 | T14 baseline lock |
-| 3 | paired-end staging in T4 | J1 / T4 | **已由 K1 resolved**（R2 symlink 但不入 project.yaml）|
-
-下一 session 应开启的新 backlog 条目：
-
-- 4. `tests/` 合计 489 行 vs GC-1 300 上限 → T12 审查
-- 5. `scripts/` 合计 473 行 → T12 审查
-- 6. T6 真数值对齐 (DoD §4.4) → T9 + T14 合并验证
+| 3 | paired-end staging in T4 | J1 / T4 | **已由 K1 resolved** |
+| **4** | `tests/` 合计 582 行 vs GC-1 每模块上限 | T11 / T12 | 落盘（docs/backlog.md），T12 审查 |
+| **5** | `scripts/` 合计 473 行 | T12 | 落盘（docs/backlog.md），T12 审查 |
+| **6** | **T9 baseline drift vs pre-J1 fixture**（行数 -20，基因集移 195，mean abs-delta=0.120）| T9 | 落盘（docs/backlog.md），**T14 阻断** |
 
 ---
 
@@ -328,14 +328,12 @@ te_analysis/
 | 候选 | 前置 | 环境要求 | 预期产出 |
 |---|---|---|---|
 | **T8** GSE132441 上游 E2E | T5 ✅ | 完整 snakemake + nextflow + `vendor/snakescale/reference/arabidopsis/` | `.ribo` 文件在 `vendor/snakescale/output/GSE132441/ribo/experiments/*.ribo` |
-| **T9** GSE105082 下游 E2E | T6 ✅ | R + TE_model 依赖 + GSE105082 `.ribo` 就位 | `data/processed/te/GSE105082/human_TE_cellline_all_T.csv` + 与旧 fixture 数值比对 |
-
-T8 和 T9 互不依赖，可并行（不同环境也行）。
+| ~~T9~~ | — | ✅ M2 `afe6138`已达 | — |
+| ~~T11~~ | — | ✅ M3 `4165bf6` 已达 | — |
 
 ### 7.2 中期（需 T8/T9 均绿）
 
-- **T11** 冻结 T9 产物为 smoke test fixture（≤ 100 行）
-- **T12** 正式启动 legacy purge（审查 tests/ + scripts/ 超限）
+- **T12** 正式启动 legacy purge（审查 tests/ + scripts/ 超限；backlog #4 / #5）
 - **T13** 文档定稿（精简 `docs/` 至 M12 的 4 篇 + contracts）
 - **T14** baseline 冻结 + `git tag v0.1-mvp`
 
@@ -415,7 +413,7 @@ diff data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv \
 
 ## 9. 已知风险 / 未决问题
 
-1. **`tests/fixtures/gse105082/baseline.json`** 可能已失效（J1 后 metadata.csv md5 改变）→ T14 重算
+1. **`tests/fixtures/gse105082/baseline.json`** 已确认失效（T9 M2 观测：产物 shape 10842×1 vs pre-J1 10862×1；mean |Δ|=0.120）→ T14 重算或选新基准；backlog #6 已纳管
 2. **`scripts/` 违反 GC-1** → T12 决定是否归档或保留为 `archive/`
 3. **`tests/` 违反 GC-1** → T12 决定是否合并测试文件
 4. **snakescale `Snakefile:171,202` paired-end 限制** → 上游 issue / 等 vendor 升级
