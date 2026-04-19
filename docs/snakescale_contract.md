@@ -85,7 +85,7 @@ snakescale has **two layers** of YAML:
 - `metadata_experiment`（按 `study_id` 过滤）：`id, creation_date, notes, metadata_checked, modifier, study_id, matched_experiment_id, experiment_alias, experiment_accession, type, title, study_name, design_description, sample_accession, sample_attribute, library_strategy, library_layout, library_construction_protocol, platform, platform_parameters, xref_link, experiment_attribute, submission_accession, sradb_updated, organism, cell_line, group, threep_adapter, fivep_adapter, threep_umi_length, fivep_umi_length, read_length, is_paired_end, experiment_file`
 - `metadata_srr`（按 `experiment_id` 过滤）：`id, experiment_id, sra_accession, creation_date`
 
-**我方替代**：不使用 db.sqlite3；将上述三表"展平"为 `data/raw/metadata.csv`（实验级）+ `data/raw/metadata_srr.csv`（待补，见 §6 阻断项）。
+**我方替代**：不使用 db.sqlite3；将上述三表"展平"合并为**单张** `data/raw/metadata.csv`（run-level 扁平表，H2 起含 `run` + `fastq_path` 两列）。见 `docs/srr_resolution_design_v2.md`。
 
 ## 3. classify_studies gate
 
@@ -117,14 +117,15 @@ snakescale has **two layers** of YAML:
 | `threep_adapter` | L2 `clip_arguments` （Ribo）或 `rnaseq.clip_arguments` | 走 `generate_clip_sequence` 等价算法；MVP 可直接传实验级 adapter | 高 |
 | `threep_umi_length` / `fivep_umi_length` | L2 `clip_arguments` 中的 `-u` 参数前缀 | `-u {fivep_umi_length}` / UMI 裁剪规则 | 中（作者基线 base 为 `-u 1`，行 `generate_yaml.py:159`）|
 | `study_name` 后缀解析（外部决策） | `deduplicate` / `_dedup` 尾缀 | study 名附加 `_dedup` → `deduplicate: true` | 高 |
-| — (缺失) | `rnaseq.fastq[GSM]` / `input.fastq[GSM]` 的 **SRR fastq 路径列表** | **需要 SRR-level sidecar**（见 §6）| 低 |
+| `run` / `fastq_path`（H2 新增） | `rnaseq.fastq[GSM]` / `input.fastq[GSM]` 的 SRR fastq 路径列表 | `df.groupby('experiment_alias')['fastq_path'].agg(list)` | 高 |
 
 ## 6. 已知开放问题
 
-1. **SRR 解析缺失（阻断项）**：作者通过 `metadata_srr` 表（SRR ↔ GSM）解析每个 GSM 对应的 SRR 列表（`generate_yaml.py:231-257`），用以构造 `{download_path}/{GSE}/{GSM}/{SRR}_1.fastq.gz`。我方 `data/raw/metadata.csv` **不含 `sra_accession` 列**。落地方案有二：
-   - (a) 新增 `data/raw/metadata_srr.csv`（GSM → SRR list）作为 sidecar，由 T3 入 schema；
-   - (b) 由 `data/raw/fastq/{GSE}/{GSM}/*_1.fastq.gz` 的文件系统现状反向推导（受 `upstream_input_contract.md` 指引）。
-   二选一需 T4 落定。
+1. **SRR 解析缺失（阻断项）— 已于 Commit H2 解决**：作者通过 `metadata_srr` 表（SRR ↔ GSM）解析每个 GSM 对应的 SRR 列表（`generate_yaml.py:231-257`），用以构造 `{download_path}/{GSE}/{GSM}/{SRR}_1.fastq.gz`。
+   - **解决方案**：采用 **方案 A**（`docs/srr_resolution_design_v2.md`）— 就地 enrich `data/raw/metadata.csv` 为 run-level 扁平表，通过 `pysradb` 查询 NCBI SRA 补齐 `run` + `fastq_path` 两列。与顶层设计 §5.2 / §9 / module_contracts §M7.MUSTNOT.3 对齐。
+   - **现状**：metadata.csv 从 2644 → 4168 run-level 行（2635 unique SRX，3 unresolved，0.11%）。
+   - T4 `stage_inputs.py` 可直接 `df.groupby('experiment_alias')['run'].agg(list)` 构造 `input.fastq[GSM]`，无需 sidecar 或 merge。
+   - （历史参考）前版本曾在 Commit G2 中推荐 sidecar `metadata_srr.csv` 方案，违反顶层设计，已在 Commit H1 `git revert` 作废。
 2. **`read_length` / `is_paired_end` 缺失（软阻断）**：作者 `metadata_experiment.is_paired_end` 为 `0`/`1`；我方 metadata 无对应列。作者代码中仅 RNA-Seq `library_layout` 用于匹配配对，snakescale 的 `Snakefile:171,202` 均硬编码 `{accession}_1.fastq.gz` → **假设全部按 single-end 文件名布局处理**（paired 会额外有 `_2.fastq.gz`，但作者代码未显式出现该路径）。T4 实施前需用户确认。
 3. **`riboflow_config` profile 名**：作者 `config/config.yaml:13` 是 `stampede_local`（TACC 私有集群 profile）。我方本地必须换成自定义 profile；值非 metadata 字段，应在 T2 `config.py` 中作为常量暴露。
 4. **`scripts/references.yaml`** 是作者预先枚举的 `organism → 参考文件相对路径` 字典（`generate_yaml.py:178-187`）。**作者未在代码中校验 organism 是否 **已** 下载到 `reference/` 目录**，只校验 key 在 yaml 中。T4 落地需与 T0 `download_reference.py` 协同检查文件就位。
