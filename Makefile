@@ -1,19 +1,22 @@
-# te_analysis unified entry
-# Target contract: te_analysis_module_contracts_v1.md §M5.
-# All business targets `@false` until their task (T4/T5/T6) is done.
+# te_analysis unified entry (module_contracts §M5).
 
-STUDY ?=
+STUDY     ?= GSE132441
+CORES     ?= 4
+METADATA  := data/raw/metadata.csv
+STUDY_DIR := data/interim/snakescale/$(STUDY)
+OUT_DIR   := data/processed/te/$(STUDY)
+PY        := PYTHONPATH=src python -m
 
 .PHONY: help env submodules stage upstream downstream all clean
 
 help:
-	@echo "make env                     # create conda env"
+	@echo "make env                     # create conda env (environment.yml)"
 	@echo "make submodules              # init vendor/ submodules"
-	@echo "make stage      STUDY=<GSE>  # TODO(T4)"
-	@echo "make upstream   STUDY=<GSE>  # TODO(T5) depends on stage"
-	@echo "make downstream STUDY=<GSE>  # TODO(T6) depends on upstream"
+	@echo "make stage      STUDY=<GSE>  # metadata.csv -> project.yaml + symlinks"
+	@echo "make upstream   STUDY=<GSE>  # run snakescale (depends on stage)"
+	@echo "make downstream STUDY=<GSE>  # run TE_model (depends on upstream)"
 	@echo "make all        STUDY=<GSE>  # alias for downstream"
-	@echo "make clean      STUDY=<GSE>  # remove interim/processed for STUDY"
+	@echo "make clean      STUDY=<GSE>  # remove interim + processed for STUDY"
 
 env:
 	conda env create -f environment.yml
@@ -22,19 +25,15 @@ submodules:
 	git submodule update --init --recursive
 
 stage:
-	@echo "TODO(T4): stage_inputs not implemented yet" >&2
-	@false
+	$(PY) te_analysis.stage_inputs --metadata $(METADATA) --study $(STUDY) --out $(STUDY_DIR)
 
 upstream: stage
-	@echo "TODO(T5): run_upstream not implemented yet" >&2
-	@false
+	$(PY) te_analysis.run_upstream --study-dir $(STUDY_DIR) --cores $(CORES)
 
 downstream: upstream
-	@echo "TODO(T6): run_downstream not implemented yet" >&2
-	@false
+	$(PY) te_analysis.run_downstream --study-dir $(STUDY_DIR) --out-dir $(OUT_DIR)
 
 all: downstream
 
 clean:
-	@echo "TODO(T7): clean STUDY=$(STUDY) not implemented yet" >&2
-	@false
+	rm -rf $(STUDY_DIR) $(OUT_DIR)
