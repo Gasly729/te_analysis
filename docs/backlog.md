@@ -36,16 +36,14 @@ te_analysis_module_contracts_v1.md §18.
 - Revisit trigger: T14 baseline lock — if any focus study (GSE132441
   / GSE105082) is hit, re-query via entrez-direct as secondary source.
 
-## 2026-04-19 paired-end staging in T4 stage_inputs.py
+## 2026-04-19 paired-end staging in T4 stage_inputs.py — RESOLVED in K1
 - Source task: J1 / T4 prep
 - Trigger scenario: 336 run-level rows carry non-empty `fastq_path_r2`
-  (paired-end FASTQ). T4 must symlink both ends and inject both into
-  snakescale `input.fastq[experiment_alias]` list.
-- Affected modules: M1 (stage_inputs.py)
-- Contract basis: `module_contracts_v1 §M1.MUST.5` requires symlink
-  creation "strictly following snakescale naming"; paired-end rule
-  `{accession}_2.fastq.gz` is not explicit in vendor Snakefile (only
-  `_1` appears) — vendor_recon in T0 punted on this (`snakescale_contract.md §6.2`).
-- Revisit trigger: start of T4 implementation; decision point:
-  (a) T4 symlinks both files, lets snakescale fail if it cannot consume
-  paired, OR (b) T4 skips paired-end rows until snakescale support verified.
+  (paired-end FASTQ).
+- Resolution (Commit K1 `acea46c`): T4 materializes BOTH R1 and R2 symlinks
+  under `<out>/staged_fastq/{GSE}/{GSM}/{SRR}_[12].fastq.gz`, but
+  `input.fastq[GSM]` and `rnaseq.fastq[GSM]` lists hold **only R1 paths**
+  (snakescale `Snakefile:171,202` hardcodes `_1.fastq.gz`). R2 is available
+  for future snakescale support without rerunning stage_inputs.
+- Follow-up: if snakescale grows explicit R2 handling, extend the lists in
+  `_build_fastq_maps()` — no data migration needed.
