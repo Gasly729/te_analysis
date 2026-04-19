@@ -1,0 +1,6 @@
+[submodule "vendor/snakescale"]
+	path = vendor/snakescale
+	url = https://github.com/RiboBase/snakescale
+[submodule "vendor/TE_model"]
+	path = vendor/TE_model
+	url = https://github.com/CenikLab/TE_model
