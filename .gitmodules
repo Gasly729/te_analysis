@@ -1,6 +1,8 @@
 [submodule "vendor/snakescale"]
 	path = vendor/snakescale
 	url = https://github.com/RiboBase/snakescale
+	ignore = none
 [submodule "vendor/TE_model"]
 	path = vendor/TE_model
 	url = https://github.com/CenikLab/TE_model
+	ignore = none
