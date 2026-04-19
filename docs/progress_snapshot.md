@@ -1,8 +1,8 @@
 # te_analysis Progress Snapshot
 
 **快照时间**：2026-04-19 UTC+08:00
-**分支**：`design/v1-minimal`（HEAD=`df61603`）
-**上次 push**：`db59910`（远端 `origin/design/v1-minimal`）— 本地领先 **24 个 commit**
+**分支**：`design/v1-minimal`（HEAD=`f08f363`）
+**上次 push**：`db59910`（远端 `origin/design/v1-minimal`）— 本地领先 **20 个 commit**
 **用途**：跨 session 交接 / Claude 冷启动 ground truth / 人类快速回顾
 
 ---
@@ -59,6 +59,7 @@
 按时间倒序，已跟 sprint plan 任务对应：
 
 ```text
+f08f363 L6  docs: progress snapshot for cross-session handoff
 df61603 L5  chore: remove stale prompt doc after T0 completion
 7bb4fea L4  docs(t0): aggregate vendor contracts → references/vendor_contracts.md
 325f195 L3  feat(t7): Makefile unified entry
@@ -101,7 +102,7 @@ b25c4e8 F1  purge: retire broken / orphaned legacy tests
 
 - 工作区**干净**（`git status --porcelain` 除 vendor untracked 外空）
 - 仅 `vendor/snakescale` 有 untracked `reference/`（用户预置的 bowtie2 索引库，非本项目产物，vendor tracked SHA 未动）
-- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` 24 commit
+- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` 20 commit
 
 ### 3.2 Submodule HEAD（已锁定，严禁 rebase）
 
