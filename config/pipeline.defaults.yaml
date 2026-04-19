@@ -1,7 +1,0 @@
-# Phase-1.5 placeholder defaults that lock contract direction only.
-# Responsibility: make the production input mode explicit without enabling runtime logic.
-# Non-responsibility in phase 1.5: no downloader behavior, path discovery, or workflow execution is defined here.
-
-input_mode: local_staged_fastq
-download_enabled: false
-fastq_root: /home/xrx/my_project/te_analysis/data/raw/fastq
