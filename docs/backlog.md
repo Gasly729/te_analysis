@@ -10,6 +10,50 @@ te_analysis_module_contracts_v1.md §18.
 - Contract basis: ...
 - Revisit trigger: ...
 
+## 2026-04-20 backlog #8 upstream resolution research
+- Source task: T8 / Session O / O1 + O6
+- Trigger scenario: Session N confirmed a vendor typo in
+  `vendor/snakescale/riboflow/RiboFlow.groovy`, but the project still needed
+  a path decision between upstream PR / local patch / SHA switch.
+- Affected modules: `vendor/snakescale` governance only; no code changes in this repo.
+- Contract basis: `te_analysis_module_contracts_v1.md:318-324`,
+  `te_analysis_top_level_design_v1.md:416`,
+  `te_analysis_sprint_plan_v1.md:240`.
+- Revisit trigger: use `docs/design/backlog_8_resolution_plan_v1.md`;
+  current recommendation is path a (upstream PR). Path b is rejected as
+  unconstitutional; path c is unavailable because upstream `main` still equals
+  locked SHA `b918e75`.
+
+## 2026-04-20 classify_studies invalidation audit
+- Source task: T8 / Session O / O2
+- Trigger scenario: Session N observed that many studies may fail
+  `classify_studies` when `override=False`, especially pre-clipped Ribo-seq
+  inputs lacking explicit `threep_adapter`.
+- Affected modules: data risk only; no repo code changes.
+- Contract basis: `vendor/snakescale/Snakefile:769-949` and
+  `docs/snakescale_contract.md:90-99`.
+- Revisit trigger: `/tmp/t8_invalid_studies_audit.csv` contains the per-study
+  audit. Current static estimate: 120 Ribo studies total, 87 strict invalid
+  (`0%` adapter coverage), 89 partial invalid (`<100%` adapter coverage).
+
+## 2026-04-20 Method F codification design
+- Source task: T8 / Session O / O4
+- Trigger scenario: Method F is validated but still enacted by ad-hoc shell.
+- Affected modules: M1 / M2 future design only.
+- Contract basis: backlog #9 follow-up after #8 is resolved.
+- Revisit trigger: implement from
+  `docs/design/method_f_codification_v1.md`; current recommendation is a new
+  helper module `src/te_analysis/stage_snakescale_injection.py`.
+
+## 2026-04-20 contract testing gap analysis
+- Source task: T8 / Session O / O5
+- Trigger scenario: 42 tests were all green, yet T8 still failed at three
+  different contract layers outside the current test boundary.
+- Affected modules: tests/ design only.
+- Contract basis: T12 test-structure review; vendor boundary remains untested.
+- Revisit trigger: use `docs/design/contract_testing_gap_v1.md` as the input
+  for the first testing subtask in T12.
+
 ## 2026-04-19 Relocate vendor contracts to references/vendor_contracts.md
 - Source task: T0 / J3
 - Trigger scenario: `sprint_plan_v1.md §1 / §4 T0` nominates

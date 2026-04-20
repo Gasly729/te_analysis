@@ -1,7 +1,7 @@
 # te_analysis Progress Snapshot
 
-**快照时间**：2026-04-20 UTC+08:00（N 批次后）
-**分支**：`design/v1-minimal`（HEAD=`505663d`，本地领先 origin **1** 个 commit）
+**快照时间**：2026-04-20 UTC+08:00（O 批次调研后）
+**分支**：`design/v1-minimal`（HEAD=`e42ed24`，本地领先 origin **2** 个 commit）
 **上次 push**：`bbcfaae`（远端 `origin/design/v1-minimal`）
 **用途**：跨 session 交接 / Claude 冷启动 ground truth / 人类快速回顾
 
@@ -33,7 +33,7 @@
 | **T5** | `run_upstream.py` | ✅ | `src/te_analysis/run_upstream.py` + `test_run_upstream.py` | L1 |
 | **T6** | `run_downstream.py` | ✅（schema 级）| `src/te_analysis/run_downstream.py` + `test_run_downstream.py` | L2 |
 | **T7** | Makefile | ✅ | `Makefile`（7 target + clean）| L3 |
-| **T8** | GSE132441 上游 E2E | ❌ N 轮不同根因：vendor typo（backlog #8）| N 轮解决了 M 轮的 #7（格式错位 + 路径可见）除错到 `run_riboflow`；新阻位 = `vendor/snakescale/riboflow/RiboFlow.groovy` 15 处 `-@ {task.cpus}` 缺 `$` 拼写错 | N1 `<TBD>` |
+| **T8** | GSE132441 上游 E2E | ⏸ 阻塞于 #8（vendor typo），O 轮调研完成 | N 轮解决了 M 轮的 #7（格式错位 + 路径可见）除错到 `run_riboflow`；O 轮确认 upstream `main` 仍等于锁定 SHA `b918e75`，推荐走 upstream PR 路径 | N1 `505663d` + O0 `e42ed24` |
 | **T9** | GSE105082 下游 E2E + 数值对齐 | ✅（schema，[known: baseline J1-drift]）| `data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv` (10842×1 [HeLa])；见 backlog #6 数值漂移 | M2 `afe6138` |
 | **T10** | `stage_inputs` 单测 | ✅ | 8 件于 `test_stage_inputs.py` + 7 件于 `test_stage_inputs_schema.py` | K2 + K3 |
 | **T11** | 下游冒烟测试 | ✅ | `tests/test_smoke_downstream.py` 98 行 + `tests/fixtures/gse105082/t9_products/` 冻结 2 CSV | M3 `4165bf6` |
@@ -59,6 +59,7 @@
 按时间倒序，已跟 sprint plan 任务对应：
 
 ```text
+e42ed24 O0  docs(snapshot): self-reference bump — 4165bf6 → 505663d (accumulated session M/N drift)
 505663d N1  docs(n1): T8 session-N — #7 resolved via method F; new #8 vendor typo block; #9 deferred codification
 bbcfaae M6  docs(m6): record T8 circuit-break — stage_inputs ↔ snakescale format gap
 f1bc001 M5  docs(m5): progress_snapshot + backlog bump post-T9/T11
@@ -322,8 +323,14 @@ te_analysis/
 | **5** | `scripts/` 合计 473 行 | T12 | 落盘（docs/backlog.md），T12 审查 |
 | **6** | **T9 baseline drift vs pre-J1 fixture**（行数 -20，基因集移 195，mean abs-delta=0.120）| T9 | 落盘（docs/backlog.md），**T14 阻断** |
 | **7** | T8 format + path-visibility gap | T8 / N Phase B | **N1 via method F resolved**；stage_inputs `_1.fastq.gz` 绞空 `_1.fastq` + mtime 序 + `vendor/snakescale/staged_fastq/{GSE}` 链入 |
-| **8** | **T8 blocked: vendor RiboFlow.groovy `-@ {task.cpus}` typo (缺 `$`)** | T8 Phase C | 落盘，**T14 阻上游交付**；括 (a) PR upstream / (b) vendor_patches/ / (c) 换 snakescale SHA |
-| **9** | method-F 脚手架未码化到 stage_inputs/run_upstream | T8 Phase B | 落盘；等 #8 解决后再扣回 |
+| **8** | **T8 blocked: vendor RiboFlow.groovy `-@ {task.cpus}` typo (缺 `$`)** | T8 Phase C + O1/O6 | O 轮调研确认 upstream `main` 仍未修；推荐 **(a) upstream PR**，否决 `(b) vendor_patches/`，`(c)` 当前无候选 SHA；见 `docs/design/backlog_8_resolution_plan_v1.md` |
+| **9** | method-F 脚手架未码化到 stage_inputs/run_upstream | T8 Phase B + O4 | 设计稿已落 `docs/design/method_f_codification_v1.md`；推荐独立 helper，而非继续膨胀 M1/M2 |
+
+### Session O 新增设计稿
+
+- `docs/design/method_f_codification_v1.md`
+- `docs/design/contract_testing_gap_v1.md`
+- `docs/design/backlog_8_resolution_plan_v1.md`
 
 ---
 
@@ -428,6 +435,7 @@ diff data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv \
 7. ~~T8 上游 E2E 被合同缝隙阻住~~ — **N1 via method F resolved**（35 tests 保持绿）
 8. **T8 被 vendor RiboFlow.groovy typo 阻住**（`samtools index/idxstats -@ {task.cpus}` 15 处缺 `$`，groovy 不插值→字面量入 bash）→ backlog #8 记 3 种缓解（upstream PR / vendor_patches / 换 SHA）
 9. **method-F 脚手架临时代码化到 bash**（symlink staged_fastq 进 vendor/snakescale/ + 空 `_1.fastq` + mtime 序）→ backlog #9 待在 #8 解决后携入 T4/T5
+10. **`classify_studies` 风险面大**：按 `vendor/snakescale/Snakefile:769-949` 的静态规则与 `metadata.csv` 统计，120 个 Ribo studies 中，87 个 study 的 `threep_adapter` 覆盖率为 `0%`，89 个 study `<100%`；`override=True` 不会跳过 QC 规则本身，只会绕过 invalid gate 后继续 `run_riboflow`
 
 ---
 
@@ -437,13 +445,13 @@ diff data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv \
 # (a) 基本一致性
 git log --oneline -5
 git submodule status
-git status --porcelain   # 期望仅 "?? vendor/snakescale"
+git status --porcelain   # 期望：submodule SHA 不漂；允许 vendor 内部 untracked 与 handoff 文档草稿
 
 # (b) 测试全绿
 source /home/xrx/miniconda3/etc/profile.d/conda.sh
 conda activate te_analysis
 PYTHONPATH=src python -m pytest tests/ -v
-# 期望：35 passed in <3s
+# 期望：42 passed in <3s
 
 # (c) Stage T4 smoke
 PYTHONPATH=src python -m te_analysis.stage_inputs \
