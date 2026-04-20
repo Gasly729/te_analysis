@@ -1,8 +1,8 @@
 # te_analysis Progress Snapshot
 
-**快照时间**：2026-04-19 UTC+08:00（M 批次后）
-**分支**：`design/v1-minimal`（HEAD=`4165bf6`，+1 自引用 M5 commit待落盘）
-**上次 push**：`db59910`（远端 `origin/design/v1-minimal`）— 本地领先 **23–24 个 commit**（M5 自引用准确计数留给下轮 cold-start 纠偏，模仿 L6 → d1a43de 模式）
+**快照时间**：2026-04-20 UTC+08:00（N 批次后）
+**分支**：`design/v1-minimal`（HEAD=`505663d`，本地领先 origin **1** 个 commit）
+**上次 push**：`bbcfaae`（远端 `origin/design/v1-minimal`）
 **用途**：跨 session 交接 / Claude 冷启动 ground truth / 人类快速回顾
 
 ---
@@ -59,7 +59,9 @@
 按时间倒序，已跟 sprint plan 任务对应：
 
 ```text
-<M5 SHA>       M5  docs(m): progress_snapshot + backlog bump post-T9/T11
+505663d N1  docs(n1): T8 session-N — #7 resolved via method F; new #8 vendor typo block; #9 deferred codification
+bbcfaae M6  docs(m6): record T8 circuit-break — stage_inputs ↔ snakescale format gap
+f1bc001 M5  docs(m5): progress_snapshot + backlog bump post-T9/T11
 4165bf6 M3  test(t11): smoke fixture from T9 products
 afe6138 M2  feat(t9): GSE105082 downstream E2E green (schema)
 d1a43de M1  docs(snapshot): patch HEAD/ahead-count drift post-self-reference
@@ -104,9 +106,10 @@ b25c4e8 F1  purge: retire broken / orphaned legacy tests
 
 ### 3.1 `git status`
 
-- 工作区**干净**（`git status --porcelain` 除 vendor untracked 外空）
-- 仅 `vendor/snakescale` 有 untracked `reference/`（用户预置的 bowtie2 索引库，非本项目产物，vendor tracked SHA 未动）
-- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` 23–24 commit（M5 未落盘前=23，落盘后=24）
+- 工作区存在 **vendor submodule untracked 内容** 与交接文档草稿；vendor tracked SHA 未动
+- `vendor/snakescale` 当前可见 untracked 目录包括 `.nextflow/`、`.snakemake/`、`adapter_check_output/`、`input/`、`intermediates/`、`log/`、`modifications/`、`nextflow_logs/`、`output/`、`reference/`、`scripts/__pycache__/`、`staged_fastq/`、`work/`，以及 `.nextflow.log`、`yaml_status.txt`
+- `vendor/TE_model` 当前可见 untracked 目录包括 `data/ribo/`、`src/__pycache__/`、`trials/GSE105082/`
+- 未 push；`design/v1-minimal` 领先 `origin/design/v1-minimal` **1** 个 commit
 
 ### 3.2 Submodule HEAD（已锁定，严禁 rebase）
 
