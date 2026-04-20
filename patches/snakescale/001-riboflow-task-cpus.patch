@@ -1,0 +1,90 @@
+diff --git a/riboflow/RiboFlow.groovy b/riboflow/RiboFlow.groovy
+index 4bf1121..f19ebb3 100644
+--- a/riboflow/RiboFlow.groovy
++++ b/riboflow/RiboFlow.groovy
+@@ -257,8 +257,8 @@ process filter{
+                      2> ${sample}.${index}.filter.log \
+             | samtools view -bS - \
+             | samtools sort -@ ${task.cpus} -o ${sample}.${index}.filter.bam \
+-            && samtools index -@ {task.cpus} ${sample}.${index}.filter.bam \
+-            && samtools idxstats -@ {task.cpus} ${sample}.${index}.filter.bam  > \
++            && samtools index -@ ${task.cpus} ${sample}.${index}.filter.bam \
++            && samtools idxstats -@ ${task.cpus} ${sample}.${index}.filter.bam  > \
+                ${sample}.${index}.filter.stats
+     """
+ 
+@@ -318,8 +318,8 @@ process transcriptome_alignment{
+ 						           2> ${sample}.${index}.transcriptome_alignment.log \
+             | samtools view -bS - \
+             | samtools sort -@ ${task.cpus} -o ${sample}.${index}.transcriptome_alignment.bam \
+-            && samtools index -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.bam \
+-            && samtools idxstats -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.bam  > \
++            && samtools index -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.bam \
++            && samtools idxstats -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.bam  > \
+                ${sample}.${index}.transcriptome_alignment.stats
+     """
+ }
+@@ -355,8 +355,8 @@ process quality_filter{
+ 	samtools view -b -q ${params.mapping_quality_cutoff} ${bam}\
+ 	| samtools sort -@ ${task.cpus} -o ${sample}.${index}.transcriptome_alignment.qpass.bam \
+ 	&& samtools view -b -c ${sample}.${index}.transcriptome_alignment.qpass.bam > ${sample}.${index}.qpass.count \
+-	&& samtools index -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam \
+-	&& samtools idxstats -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam  > \
++	&& samtools index -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam \
++	&& samtools idxstats -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam  > \
+                ${sample}.${index}.transcriptome_alignment.qpass.stats
+ 	"""
+ }
+@@ -550,7 +550,7 @@ process genome_alignment{
+                2> ${sample}.${index}.genome_alignment.log \
+            | samtools view -bS - \
+            | samtools sort -@ ${task.cpus} -o ${sample}.${index}.genome_alignment.bam \
+-           && samtools index -@ {task.cpus} ${sample}.${index}.genome_alignment.bam \
++           && samtools index -@ ${task.cpus} ${sample}.${index}.genome_alignment.bam \
+            && rfc bt2-log-to-csv -o ${sample}.${index}.genome_alignment.csv \
+                   -n ${sample} -p genome -l ${sample}.${index}.genome_alignment.log
+     """
+@@ -1169,8 +1169,8 @@ process post_genome_alignment{
+                      2> ${sample}.${index}.postgenome_alignment.log \
+           | samtools view -bS - \
+           | samtools sort -@ ${task.cpus} -o ${sample}.${index}.postgenome_alignment.bam \
+-          && samtools index -@ {task.cpus} ${sample}.${index}.postgenome_alignment.bam \
+-          && samtools idxstats -@ {task.cpus} ${sample}.${index}.postgenome_alignment.bam  > \
++          && samtools index -@ ${task.cpus} ${sample}.${index}.postgenome_alignment.bam \
++          && samtools idxstats -@ ${task.cpus} ${sample}.${index}.postgenome_alignment.bam  > \
+              ${sample}.${index}.postgenome_alignment.stats \
+           && rfc bt2-log-to-csv -o ${sample}.${index}.postgenome_alignment.csv \
+                 -n ${sample} -p post_genome -l ${sample}.${index}.postgenome_alignment.log
+@@ -1525,8 +1525,8 @@ process rnaseq_filter{
+                      2> ${sample}.${index}.filter.log \
+             | samtools view -bS - \
+             | samtools sort -@ ${task.cpus} -o ${sample}.${index}.filter.bam \
+-            && samtools index -@ {task.cpus} ${sample}.${index}.filter.bam \
+-            && samtools idxstats -@ {task.cpus} ${sample}.${index}.filter.bam  > \
++            && samtools index -@ ${task.cpus} ${sample}.${index}.filter.bam \
++            && samtools idxstats -@ ${task.cpus} ${sample}.${index}.filter.bam  > \
+                ${sample}.${index}.filter.stats
+     """
+ 
+@@ -1582,8 +1582,8 @@ process rnaseq_transcriptome_alignment{
+ 						           2> ${sample}.${index}.transcriptome_alignment.log \
+            | samtools view -bS - \
+            | samtools sort -@ ${task.cpus} -o ${sample}.${index}.transcriptome_alignment.bam \
+-           && samtools index -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.bam \
+-           && samtools idxstats -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.bam  > \
++           && samtools index -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.bam \
++           && samtools idxstats -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.bam  > \
+               ${sample}.${index}.transcriptome_alignment.stats
+    """
+ }
+@@ -1621,8 +1621,8 @@ process rnaseq_quality_filter{
+ 	samtools view -b -q ${params.mapping_quality_cutoff} ${bam}\
+ 	| samtools sort -@ ${task.cpus} -o ${sample}.${index}.transcriptome_alignment.qpass.bam \
+ 	&& samtools view -b -c ${sample}.${index}.transcriptome_alignment.qpass.bam > ${sample}.${index}.qpass.count \
+-	&& samtools index -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam \
+-	&& samtools idxstats -@ {task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam  > \
++	&& samtools index -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam \
++	&& samtools idxstats -@ ${task.cpus} ${sample}.${index}.transcriptome_alignment.qpass.bam  > \
+                ${sample}.${index}.transcriptome_alignment.qpass.stats
+ 	"""
+ }
