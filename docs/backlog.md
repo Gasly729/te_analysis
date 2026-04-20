@@ -82,6 +82,44 @@ te_analysis_module_contracts_v1.md §18.
   delete `baseline_outputs/`, or (b) if upstream Ribo-seq inputs change
   again, rerun T9 and re-freeze t9_products/.
 
+## 2026-04-19 T8 upstream E2E blocked by stage_inputs ↔ snakescale input-format mismatch
+- Source task: T8 (GSE132441 upstream E2E) attempted in session M.
+- Trigger scenario: `run_upstream --study-dir data/interim/snakescale/GSE132441
+  --cores 32` → snakemake plan is correct (25 jobs, dry-run clean), but live
+  execution of `rule download_fastq_files` fails with `SpawnedJobError` at
+  all 6 SRR accessions (e.g. SRR9257373). Root cause: the rule output is
+  `{dir}/{accession}_1.fastq` (uncompressed), and when neither that nor
+  `{accession}.fastq` exists on disk it invokes `prefetch + fasterq-dump`
+  (network download), which the dev machine cannot satisfy.
+- Observed: T4 materialises **`_1.fastq.gz`** symlinks (matching
+  snakescale's post-`gzip_fastq` output naming), but the upstream rule
+  `download_fastq_files` pre-`gzip_fastq` expects the **raw `_1.fastq`**
+  to already exist (or it downloads). Snakefile:242, Snakefile:245.
+- Affected modules: M1 `stage_inputs.py` staging contract vs M8 snakescale
+  Snakefile semantics. Not a vendor bug.
+- Contract basis: vendor/snakescale/Snakefile is immutable per GC-0.
+  stage_inputs.py's contract doc claims `_1.fastq.gz` matches snakescale
+  input; audit shows it matches only post-download-and-gzip, not the
+  pre-download input slot.
+- Revisit trigger: **T14 baseline lock (blocking T8 deliverable)**. Three
+  candidate mitigations to weigh:
+    (a) touch empty `_1.fastq` next to each `_1.fastq.gz` symlink so
+        `download_fastq_files` short-circuits (output[0] exists → skip)
+        and subsequent `gzip_fastq` is made up-to-date via `snakemake
+        --touch`. **Risk**: gzip_fastq rerun would replace our real .gz
+        with gzip(empty); needs careful mtime staging.
+    (b) materialise real decompressed `_1.fastq` (disk cost ~4× gz size;
+        for GSE132441 6 SRR × ~1 GB → +24 GB).
+    (c) extend T4 stage_inputs.py to produce both forms (touch plain +
+        symlink gz + mtime order).
+  Decision to defer until session N so T4/T5 contracts can be re-read
+  against Snakefile with fresh eyes.
+- Files still clean post-attempt: symlink at
+  `vendor/snakescale/input/project/GSE132441/GSE132441.yaml` left in place
+  (run_upstream idempotency); no vendor tracked SHA moved; snakescale
+  `.snakemake/log/2026-04-20T094238.184529.snakemake.log` retained for
+  forensic review.
+
 ## 2026-04-19 paired-end staging in T4 stage_inputs.py — RESOLVED in K1
 - Source task: J1 / T4 prep
 - Trigger scenario: 336 run-level rows carry non-empty `fastq_path_r2`

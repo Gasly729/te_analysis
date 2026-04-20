@@ -33,7 +33,7 @@
 | **T5** | `run_upstream.py` | ✅ | `src/te_analysis/run_upstream.py` + `test_run_upstream.py` | L1 |
 | **T6** | `run_downstream.py` | ✅（schema 级）| `src/te_analysis/run_downstream.py` + `test_run_downstream.py` | L2 |
 | **T7** | Makefile | ✅ | `Makefile`（7 target + clean）| L3 |
-| **T8** | GSE132441 上游 E2E | ⬜ 未启动 | 需 snakemake + nextflow + `vendor/snakescale/reference/` 完整部署 | — |
+| **T8** | GSE132441 上游 E2E | ❌ 尝试后降级（合同缝隙）| stage_inputs symlink为 `_1.fastq.gz` 与 snakescale `Snakefile:237` 期待 `_1.fastq`不匹配→ `download_fastq_files` 触发网络下载失败；见 backlog #7 | 尝试记录在 M6 log |
 | **T9** | GSE105082 下游 E2E + 数值对齐 | ✅（schema，[known: baseline J1-drift]）| `data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv` (10842×1 [HeLa])；见 backlog #6 数值漂移 | M2 `afe6138` |
 | **T10** | `stage_inputs` 单测 | ✅ | 8 件于 `test_stage_inputs.py` + 7 件于 `test_stage_inputs_schema.py` | K2 + K3 |
 | **T11** | 下游冒烟测试 | ✅ | `tests/test_smoke_downstream.py` 98 行 + `tests/fixtures/gse105082/t9_products/` 冻结 2 CSV | M3 `4165bf6` |
@@ -318,6 +318,7 @@ te_analysis/
 | **4** | `tests/` 合计 582 行 vs GC-1 每模块上限 | T11 / T12 | 落盘（docs/backlog.md），T12 审查 |
 | **5** | `scripts/` 合计 473 行 | T12 | 落盘（docs/backlog.md），T12 审查 |
 | **6** | **T9 baseline drift vs pre-J1 fixture**（行数 -20，基因集移 195，mean abs-delta=0.120）| T9 | 落盘（docs/backlog.md），**T14 阻断** |
+| **7** | **T8 blocked: stage_inputs `_1.fastq.gz` vs snakescale expects `_1.fastq`**（rule download_fastq_files 触发网络下载失败）| T8 | 落盘（docs/backlog.md），**T14 阻断上游交付** |
 
 ---
 
@@ -327,7 +328,7 @@ te_analysis/
 
 | 候选 | 前置 | 环境要求 | 预期产出 |
 |---|---|---|---|
-| **T8** GSE132441 上游 E2E | T5 ✅ | 完整 snakemake + nextflow + `vendor/snakescale/reference/arabidopsis/` | `.ribo` 文件在 `vendor/snakescale/output/GSE132441/ribo/experiments/*.ribo` |
+| **T8 重试** | T5 ✅；backlog #7 缓解方案选定 | 基础环境已全部就位（snakemake 9.19 / nextflow / Arabidopsis ref）。关键：必须先定 backlog #7 (a)/(b)/(c) 的哪种缓解 | 缓解下的 `.ribo` 产物与 T9-style diff 报告 |
 | ~~T9~~ | — | ✅ M2 `afe6138`已达 | — |
 | ~~T11~~ | — | ✅ M3 `4165bf6` 已达 | — |
 
@@ -419,6 +420,7 @@ diff data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv \
 4. **snakescale `Snakefile:171,202` paired-end 限制** → 上游 issue / 等 vendor 升级
 5. **`nonpolyA_gene.csv` 物种适用性** 未决（te_model_contract §6.4）→ T6 运行非 human/mouse 时需补策略
 6. **`te_model_contract §6.6` `model_results.txt` 文档与代码不一致** → 已统一用 `human_TE_cellline_all_T.csv` 作终止信号
+7. **T8 上游 E2E 被合同缝隙阻住**（M6：stage_inputs `_1.fastq.gz` 符号链与 snakescale `Snakefile:237` 期待 `_1.fastq`不匹配→ `download_fastq_files` 走 `prefetch` 网络下载失败）→ backlog #7 已列 3 种缓解候选
 
 ---
 
