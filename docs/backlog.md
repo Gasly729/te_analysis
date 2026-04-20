@@ -82,8 +82,90 @@ te_analysis_module_contracts_v1.md §18.
   delete `baseline_outputs/`, or (b) if upstream Ribo-seq inputs change
   again, rerun T9 and re-freeze t9_products/.
 
-## 2026-04-19 T8 upstream E2E blocked by stage_inputs ↔ snakescale input-format mismatch
+## 2026-04-19 T8 upstream E2E blocked by stage_inputs ↔ snakescale input-format mismatch — RESOLVED in N via method F
 - Source task: T8 (GSE132441 upstream E2E) attempted in session M.
+- Resolution (session N Phase B, commit `<N1>`): Two compounding gaps were
+  identified and addressed without vendor edits:
+    (i) **path-visibility gap**: T4 stages symlinks under
+        `data/interim/snakescale/{STUDY}/staged_fastq/…` but snakemake runs
+        with `cwd=vendor/snakescale/` and resolves yaml paths like
+        `staged_fastq/{GSE}/…` relative to that cwd. Fix (one-shot in
+        session N, not yet in T4 code): symlink
+        `vendor/snakescale/staged_fastq/{GSE} → data/interim/snakescale/{STUDY}/staged_fastq/{GSE}`.
+    (ii) **format-mismatch gap**: Snakefile:237 `download_fastq_files.output`
+        is `{dir}/{accession}_1.fastq` (uncompressed); stage_inputs materialises
+        `_1.fastq.gz`. Fix: create empty `_1.fastq` placeholders with mtime
+        older than the `.gz` symlink. Snakefile:242/245 then short-circuits
+        (both "file exists" checks satisfied → no prefetch, no mv). gzip_fastq
+        sees output `.gz` newer than input `.fastq` → marked up-to-date.
+- Verification: Phase B single-GSM probe (`GSE132441_probe`) showed
+  13-job plan (vs 25 before) with `download_fastq_files` / `gzip_fastq`
+  absent from execution set; `snakemake --until check_adapter` completed
+  all 6 check_adapter jobs successfully reading the real `.gz` via zcat.
+- Alternative rejected: `--omit-from download_fastq_files` (method E) —
+  snakemake 9.19 semantics is "skip rule AND downstream" (help line:420–424),
+  which prunes the entire DAG → "Nothing to be done".
+- Follow-up: method F is currently orchestrated by one-shot bash; long-term
+  migration into `stage_inputs.py` / `run_upstream.py` is recorded as
+  backlog #9 (deferred out of GC-1 scope).
+
+## 2026-04-19 T8 blocked by vendor RiboFlow.groovy groovy-interpolation typo
+- Source task: T8 Phase C (session N)
+- Trigger scenario: After method F cleared the stage_inputs/Snakefile gap,
+  `snakemake --config studies="['GSE132441']" override=True` advanced the
+  DAG through `check_adapter` → `classify_studies` → `run_riboflow`, which
+  invokes `nextflow riboflow/RiboFlow.groovy`. The `filter` nextflow process
+  failed with:
+    `[E::hts_open_format] Failed to open file -@`
+    `samtools idxstats: failed to open "-@": No such file or directory`
+- Root cause: **vendor typo** in `vendor/snakescale/riboflow/RiboFlow.groovy`
+  at lines 260, 261, 321, 322, 358, 359, 553, 1172, 1173, 1528, 1529, 1585,
+  1586, 1624, 1625 (15 occurrences). All `samtools index` and
+  `samtools idxstats` invocations use `-@ {task.cpus}` **without the leading
+  `$`**. Groovy only interpolates `${...}`; bare `{task.cpus}` reaches bash
+  as a literal token → samtools receives `-@` as a filename and aborts.
+  Sibling `samtools sort -@ ${task.cpus}` calls are correct at lines 254,
+  259, 315, 320, 356, 552, 1171, 1527, 1584, 1622.
+- Affected modules: vendor/snakescale (RiboFlow.groovy, tracked content of
+  submodule SHA `b918e75…`).
+- Contract basis: per top_level §2 and GC-0, `vendor/snakescale/` is
+  immutable; submodule SHA is locked at `b918e75f877262dca96665d18c3b472675f30a6d`.
+  No in-tree patch permitted.
+- Revisit trigger: **T14 baseline lock (blocking upstream E2E deliverable)**.
+  Candidate mitigations for session O+:
+    (a) submit upstream PR to RiboBase/snakescale fixing the 15 lines;
+        revendor after merge.
+    (b) maintain a local patch file under `vendor_patches/snakescale.patch`
+        applied at repo init (changes the "vendor immutable" contract).
+    (c) switch to a snakescale fork/SHA that has the typo fixed (survey needed).
+  No decision in session N.
+- Files retained for forensic review:
+  - `/tmp/t8_full_override.log` (full run with override=True)
+  - `vendor/snakescale/log/failed/GSE132441/modifications.log`
+  - `vendor/snakescale/.snakemake/log/2026-04-20T100824.299319.snakemake.log`
+
+## 2026-04-19 method-F scaffolding not yet codified in stage_inputs/run_upstream
+- Source task: T8 Phase B (session N)
+- Trigger scenario: The two symlinks + empty-placeholder + mtime setup
+  required for method F are currently enacted by an ad-hoc shell/python
+  block in session N. If T4 / T5 are expected to produce a snakescale-ready
+  tree end-to-end, this logic must migrate in.
+- Needed operations (concise):
+    1. After `stage_inputs` writes `{out}/staged_fastq/...`, for each
+       `_1.fastq.gz` symlink, `touch -d '1 hour ago' <same_path>_1.fastq`
+       (empty placeholder with older mtime), then `touch -h <.gz>` to
+       ensure symlink mtime is now.
+    2. `run_upstream` must add a second symlink besides project.yaml:
+       `vendor/snakescale/staged_fastq/{GSE} → {out}/staged_fastq/{GSE}`
+       (idempotent, unlink-and-relink pattern per K1).
+- Affected modules: M1 `stage_inputs.py`, M2 `run_upstream.py`.
+- Contract basis: GC-1 (tests/src budget) + M1 MUST list; neither currently
+  declares this behaviour, which is why session M's T8 attempt failed.
+- Revisit trigger: resolving backlog #8 (vendor typo) unblocks full E2E;
+  at that point method-F scaffolding must be codified rather than shell-scripted.
+- Deferred out of session N per task constraint "不扩 stage_inputs.py".
+
+## 2026-04-19 paired-end staging in T4 stage_inputs.py — RESOLVED in K1
 - Trigger scenario: `run_upstream --study-dir data/interim/snakescale/GSE132441
   --cores 32` → snakemake plan is correct (25 jobs, dry-run clean), but live
   execution of `rule download_fastq_files` fails with `SpawnedJobError` at

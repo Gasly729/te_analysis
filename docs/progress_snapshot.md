@@ -33,7 +33,7 @@
 | **T5** | `run_upstream.py` | ✅ | `src/te_analysis/run_upstream.py` + `test_run_upstream.py` | L1 |
 | **T6** | `run_downstream.py` | ✅（schema 级）| `src/te_analysis/run_downstream.py` + `test_run_downstream.py` | L2 |
 | **T7** | Makefile | ✅ | `Makefile`（7 target + clean）| L3 |
-| **T8** | GSE132441 上游 E2E | ❌ 尝试后降级（合同缝隙）| stage_inputs symlink为 `_1.fastq.gz` 与 snakescale `Snakefile:237` 期待 `_1.fastq`不匹配→ `download_fastq_files` 触发网络下载失败；见 backlog #7 | 尝试记录在 M6 log |
+| **T8** | GSE132441 上游 E2E | ❌ N 轮不同根因：vendor typo（backlog #8）| N 轮解决了 M 轮的 #7（格式错位 + 路径可见）除错到 `run_riboflow`；新阻位 = `vendor/snakescale/riboflow/RiboFlow.groovy` 15 处 `-@ {task.cpus}` 缺 `$` 拼写错 | N1 `<TBD>` |
 | **T9** | GSE105082 下游 E2E + 数值对齐 | ✅（schema，[known: baseline J1-drift]）| `data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv` (10842×1 [HeLa])；见 backlog #6 数值漂移 | M2 `afe6138` |
 | **T10** | `stage_inputs` 单测 | ✅ | 8 件于 `test_stage_inputs.py` + 7 件于 `test_stage_inputs_schema.py` | K2 + K3 |
 | **T11** | 下游冒烟测试 | ✅ | `tests/test_smoke_downstream.py` 98 行 + `tests/fixtures/gse105082/t9_products/` 冻结 2 CSV | M3 `4165bf6` |
@@ -318,7 +318,9 @@ te_analysis/
 | **4** | `tests/` 合计 582 行 vs GC-1 每模块上限 | T11 / T12 | 落盘（docs/backlog.md），T12 审查 |
 | **5** | `scripts/` 合计 473 行 | T12 | 落盘（docs/backlog.md），T12 审查 |
 | **6** | **T9 baseline drift vs pre-J1 fixture**（行数 -20，基因集移 195，mean abs-delta=0.120）| T9 | 落盘（docs/backlog.md），**T14 阻断** |
-| **7** | **T8 blocked: stage_inputs `_1.fastq.gz` vs snakescale expects `_1.fastq`**（rule download_fastq_files 触发网络下载失败）| T8 | 落盘（docs/backlog.md），**T14 阻断上游交付** |
+| **7** | T8 format + path-visibility gap | T8 / N Phase B | **N1 via method F resolved**；stage_inputs `_1.fastq.gz` 绞空 `_1.fastq` + mtime 序 + `vendor/snakescale/staged_fastq/{GSE}` 链入 |
+| **8** | **T8 blocked: vendor RiboFlow.groovy `-@ {task.cpus}` typo (缺 `$`)** | T8 Phase C | 落盘，**T14 阻上游交付**；括 (a) PR upstream / (b) vendor_patches/ / (c) 换 snakescale SHA |
+| **9** | method-F 脚手架未码化到 stage_inputs/run_upstream | T8 Phase B | 落盘；等 #8 解决后再扣回 |
 
 ---
 
@@ -328,7 +330,7 @@ te_analysis/
 
 | 候选 | 前置 | 环境要求 | 预期产出 |
 |---|---|---|---|
-| **T8 重试** | T5 ✅；backlog #7 缓解方案选定 | 基础环境已全部就位（snakemake 9.19 / nextflow / Arabidopsis ref）。关键：必须先定 backlog #7 (a)/(b)/(c) 的哪种缓解 | 缓解下的 `.ribo` 产物与 T9-style diff 报告 |
+| **T8 重试** | **先解 backlog #8** vendor typo | 选定 (a)/(b)/(c) ：最实际是 (b) `vendor_patches/snakescale.patch` 或 (c) 换 SHA（需调研 upstream 有无已修复 SHA）| 3 个 `.ribo` + `output/GSE132441/ribo/experiments/` 树 |
 | ~~T9~~ | — | ✅ M2 `afe6138`已达 | — |
 | ~~T11~~ | — | ✅ M3 `4165bf6` 已达 | — |
 
@@ -420,7 +422,9 @@ diff data/processed/te/GSE105082/homo_sapiens_TE_cellline_all_T.csv \
 4. **snakescale `Snakefile:171,202` paired-end 限制** → 上游 issue / 等 vendor 升级
 5. **`nonpolyA_gene.csv` 物种适用性** 未决（te_model_contract §6.4）→ T6 运行非 human/mouse 时需补策略
 6. **`te_model_contract §6.6` `model_results.txt` 文档与代码不一致** → 已统一用 `human_TE_cellline_all_T.csv` 作终止信号
-7. **T8 上游 E2E 被合同缝隙阻住**（M6：stage_inputs `_1.fastq.gz` 符号链与 snakescale `Snakefile:237` 期待 `_1.fastq`不匹配→ `download_fastq_files` 走 `prefetch` 网络下载失败）→ backlog #7 已列 3 种缓解候选
+7. ~~T8 上游 E2E 被合同缝隙阻住~~ — **N1 via method F resolved**（35 tests 保持绿）
+8. **T8 被 vendor RiboFlow.groovy typo 阻住**（`samtools index/idxstats -@ {task.cpus}` 15 处缺 `$`，groovy 不插值→字面量入 bash）→ backlog #8 记 3 种缓解（upstream PR / vendor_patches / 换 SHA）
+9. **method-F 脚手架临时代码化到 bash**（symlink staged_fastq 进 vendor/snakescale/ + 空 `_1.fastq` + mtime 序）→ backlog #9 待在 #8 解决后携入 T4/T5
 
 ---
 
