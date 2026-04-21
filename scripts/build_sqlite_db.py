@@ -7,7 +7,7 @@ Decision anchors:
   D3: threep_adapter missing values become empty strings
   D4: Do not build unitmetadata_* tables
   D5: Keep OPTIONAL column names in DDL and leave their values NULL
-  D6: Drop Ribo-Seq experiments whose matched RNA-Seq alias is missing or unresolvable
+  D6: Keep Ribo-Seq experiments when matched RNA-Seq is missing or unresolvable, set FK NULL, and log a warning
   D7: Keep unsupported-organism studies in sqlite and only flag them in the audit
 """
 
@@ -37,6 +37,8 @@ REQUIRED_SOURCE_COLUMNS = [
     "organism",
     "threep_adapter",
 ]
+
+VALID_EXPERIMENT_TYPES = {"Ribo-Seq", "RNA-Seq"}
 
 DDL_FULL = """
 CREATE TABLE metadata_study (
@@ -126,13 +128,33 @@ class BuildArtifacts:
     smoke_candidate: dict[str, Any] | None
 
 
+def _clean_text_series(series: pd.Series) -> pd.Series:
+    cleaned = series.astype("string")
+    cleaned = cleaned.str.strip()
+    cleaned = cleaned.replace({"": pd.NA, "NA": pd.NA, "nan": pd.NA, "None": pd.NA})
+    return cleaned
+
+
 def load_metadata(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path, skiprows=[0])
     for column in REQUIRED_SOURCE_COLUMNS:
         if column not in df.columns:
             raise AssertionError(f"missing source col: {column}")
+    df = df.copy()
+    for column in [
+        "study_name",
+        "experiment_alias",
+        "corrected_type",
+        "organism",
+        "run",
+        "matched_RNA-seq_experiment_alias",
+        "threep_adapter",
+        "fivep_adapter",
+    ]:
+        if column in df.columns:
+            df[column] = _clean_text_series(df[column])
 
-    return df.copy()
+    return df
 
 
 def load_supported_organisms(path: Path) -> list[str]:
@@ -213,56 +235,158 @@ def build_organism_audit(
     return organism_summary, blocked_summary
 
 
-def _resolve_preliminary_drop_reason(
-    row: pd.Series, alias_to_pre_id: dict[str, int], alias_to_type: dict[str, str]
-) -> str | None:
-    if row["corrected_type"] != "Ribo-Seq":
-        return None
+def _build_issue_rows(
+    frame: pd.DataFrame,
+    mask: pd.Series,
+    *,
+    level: str,
+    reason: str,
+) -> pd.DataFrame:
+    issue_df = frame.loc[mask].copy()
+    if issue_df.empty:
+        return pd.DataFrame(columns=["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"])
 
-    matched_alias = row.get("matched_RNA-seq_experiment_alias")
-    if pd.isna(matched_alias) or str(matched_alias).strip() in {"", "NA"}:
-        return "matched_RNA-Seq missing"
+    for column in ["experiment_alias", "study_name", "corrected_type"]:
+        if column not in issue_df.columns:
+            issue_df[column] = None
 
-    matched_alias = str(matched_alias).strip()
-    if matched_alias not in alias_to_pre_id:
-        return "matched_RNA-Seq unresolvable"
+    issue_df = issue_df[["experiment_alias", "study_name", "corrected_type"]].copy()
+    issue_df.insert(0, "level", level)
+    issue_df["drop_reason"] = reason
+    return issue_df
 
-    if alias_to_type.get(matched_alias) != "RNA-Seq":
-        return "matched target is not RNA-Seq"
 
-    return None
+def filter_invalid_source_rows(metadata_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    issue_frames: list[pd.DataFrame] = []
+    keep_mask = pd.Series(True, index=metadata_df.index)
+
+    missing_study_mask = metadata_df["study_name"].isna()
+    issue_frames.append(
+        _build_issue_rows(metadata_df, missing_study_mask, level="source_row", reason="missing study_name")
+    )
+    keep_mask &= ~missing_study_mask
+
+    missing_experiment_mask = metadata_df["experiment_alias"].isna()
+    issue_frames.append(
+        _build_issue_rows(
+            metadata_df,
+            missing_experiment_mask,
+            level="source_row",
+            reason="missing experiment_alias",
+        )
+    )
+    keep_mask &= ~missing_experiment_mask
+
+    invalid_type_mask = ~metadata_df["corrected_type"].isin(VALID_EXPERIMENT_TYPES)
+    issue_frames.append(
+        _build_issue_rows(
+            metadata_df,
+            invalid_type_mask,
+            level="source_row",
+            reason="invalid corrected_type",
+        )
+    )
+    keep_mask &= ~invalid_type_mask
+
+    missing_organism_mask = metadata_df["organism"].isna()
+    issue_frames.append(
+        _build_issue_rows(metadata_df, missing_organism_mask, level="source_row", reason="missing organism")
+    )
+    keep_mask &= ~missing_organism_mask
+
+    filtered_df = metadata_df.loc[keep_mask].copy()
+    issues_df = pd.concat(issue_frames, ignore_index=True)
+    return filtered_df, issues_df
+
+
+def build_duplicate_audit(metadata_df: pd.DataFrame) -> pd.DataFrame:
+    audit_rows: list[dict[str, Any]] = []
+
+    experiment_compare_columns = [
+        "corrected_type",
+        "organism",
+        "matched_RNA-seq_experiment_alias",
+        "threep_adapter",
+        "fivep_adapter",
+        "experiment_accession",
+        "title",
+        "sample_accession",
+        "library_strategy",
+        "library_layout",
+        "library_construction_protocol",
+        "platform",
+        "platform_parameters",
+        "xref_link",
+        "experiment_attribute",
+        "submission_accession",
+        "sradb_updated",
+        "cell_line",
+        "group",
+        "threep_umi_length",
+        "fivep_umi_length",
+    ]
+    compare_columns = [column for column in experiment_compare_columns if column in metadata_df.columns]
+    for (study_name, experiment_alias), group in metadata_df.groupby(["study_name", "experiment_alias"], dropna=False):
+        if len(group) <= 1:
+            continue
+        for column in compare_columns:
+            non_null_values = {
+                str(value)
+                for value in group[column].dropna().tolist()
+            }
+            if len(non_null_values) > 1:
+                audit_rows.append(
+                    {
+                        "level": "experiment",
+                        "experiment_alias": experiment_alias,
+                        "study_name": study_name,
+                        "corrected_type": None,
+                        "drop_reason": f"conflicting duplicate experiment metadata: {column}",
+                    }
+                )
+
+    run_compare_columns = compare_columns + [column for column in ["fastq_path", "fastq_path_r2"] if column in metadata_df.columns]
+    for (study_name, experiment_alias, run), group in metadata_df.groupby(
+        ["study_name", "experiment_alias", "run"], dropna=False
+    ):
+        if pd.isna(run) or len(group) <= 1:
+            continue
+        for column in run_compare_columns:
+            non_null_values = {
+                str(value)
+                for value in group[column].dropna().tolist()
+            }
+            if len(non_null_values) > 1:
+                audit_rows.append(
+                    {
+                        "level": "run",
+                        "experiment_alias": experiment_alias,
+                        "study_name": study_name,
+                        "corrected_type": None,
+                        "drop_reason": f"conflicting duplicate run metadata: {column}",
+                    }
+                )
+
+    if not audit_rows:
+        return pd.DataFrame(columns=["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"])
+
+    return pd.DataFrame(audit_rows).drop_duplicates().reset_index(drop=True)
 
 
 def build_sqlite_inputs(metadata_df: pd.DataFrame, supported_organisms: list[str]) -> BuildArtifacts:
+    metadata_df, source_issue_df = filter_invalid_source_rows(metadata_df)
+    duplicate_issue_df = build_duplicate_audit(metadata_df)
     organism_audit_df, blocked_study_df = build_organism_audit(metadata_df, supported_organisms)
 
     experiment_seed_df = (
         metadata_df.sort_values(["study_name", "experiment_alias", "run"], na_position="last")
-        .drop_duplicates(subset=["experiment_alias"], keep="first")
+        .drop_duplicates(subset=["study_name", "experiment_alias"], keep="first")
         .copy()
     )
-    experiment_seed_df["study_name"] = experiment_seed_df["study_name"].astype(str).str.strip()
     experiment_seed_df = experiment_seed_df.sort_values(["study_name", "experiment_alias"]).reset_index(drop=True)
     experiment_seed_df["pre_id"] = experiment_seed_df.index + 1
 
-    alias_to_pre_id = dict(zip(experiment_seed_df["experiment_alias"], experiment_seed_df["pre_id"]))
-    alias_to_type = dict(zip(experiment_seed_df["experiment_alias"], experiment_seed_df["corrected_type"]))
-
-    experiment_seed_df["drop_reason"] = experiment_seed_df.apply(
-        _resolve_preliminary_drop_reason,
-        axis=1,
-        alias_to_pre_id=alias_to_pre_id,
-        alias_to_type=alias_to_type,
-    )
-
-    dropped_experiment_df = experiment_seed_df.loc[
-        experiment_seed_df["drop_reason"].notna(),
-        ["experiment_alias", "study_name", "corrected_type", "drop_reason"],
-    ].copy()
-    dropped_experiment_df.insert(0, "level", "experiment")
-
-    experiment_kept_df = experiment_seed_df[experiment_seed_df["drop_reason"].isna()].copy()
-    experiment_kept_df = experiment_kept_df.sort_values(["study_name", "experiment_alias"]).reset_index(drop=True)
+    experiment_kept_df = experiment_seed_df.sort_values(["study_name", "experiment_alias"]).reset_index(drop=True)
 
     study_df = (
         experiment_kept_df[["study_name"]]
@@ -278,46 +402,79 @@ def build_sqlite_inputs(metadata_df: pd.DataFrame, supported_organisms: list[str
     experiment_kept_df = experiment_kept_df.sort_values(["study_id", "experiment_alias"]).reset_index(drop=True)
     experiment_kept_df["id"] = experiment_kept_df.index + 1
 
-    alias_to_final_id = dict(zip(experiment_kept_df["experiment_alias"], experiment_kept_df["id"]))
+    alias_to_final_id = dict(
+        zip(
+            zip(experiment_kept_df["study_name"], experiment_kept_df["experiment_alias"]),
+            experiment_kept_df["id"],
+        )
+    )
+    alias_to_final_type = dict(
+        zip(
+            zip(experiment_kept_df["study_name"], experiment_kept_df["experiment_alias"]),
+            experiment_kept_df["corrected_type"],
+        )
+    )
+
+    matched_warning_rows: list[dict[str, Any]] = []
 
     def translate_matched(row: pd.Series) -> int | None:
         if row["corrected_type"] != "Ribo-Seq":
             return None
-        matched_alias = str(row["matched_RNA-seq_experiment_alias"]).strip()
-        matched_id = alias_to_final_id.get(matched_alias)
+
+        matched_alias = row["matched_RNA-seq_experiment_alias"]
+        if pd.isna(matched_alias):
+            return None
+
+        matched_key = (row["study_name"], matched_alias)
+        matched_id = alias_to_final_id.get(matched_key)
+        matched_type = alias_to_final_type.get(matched_key)
         if matched_id is None:
-            raise KeyError(f"matched RNA-Seq alias missing after filtering: {matched_alias}")
+            matched_warning_rows.append(
+                {
+                    "level": "experiment",
+                    "experiment_alias": row["experiment_alias"],
+                    "study_name": row["study_name"],
+                    "corrected_type": row["corrected_type"],
+                    "drop_reason": "matched_RNA-seq_experiment_alias not found in same study; matched_experiment_id set NULL",
+                }
+            )
+            return None
+        if matched_type != "RNA-Seq":
+            matched_warning_rows.append(
+                {
+                    "level": "experiment",
+                    "experiment_alias": row["experiment_alias"],
+                    "study_name": row["study_name"],
+                    "corrected_type": row["corrected_type"],
+                    "drop_reason": "matched target exists but is not RNA-Seq; matched_experiment_id set NULL",
+                }
+            )
+            return None
         return int(matched_id)
 
     experiment_kept_df["matched_experiment_id"] = experiment_kept_df.apply(translate_matched, axis=1)
     experiment_kept_df["matched_experiment_id"] = experiment_kept_df["matched_experiment_id"].astype("Int64")
 
-    study_all_df = (
-        metadata_df[["study_name"]]
-        .drop_duplicates()
-        .rename(columns={"study_name": "geo_accession"})
-        .sort_values("geo_accession")
-        .reset_index(drop=True)
-    )
-    dropped_study_df = study_all_df.loc[
-        ~study_all_df["geo_accession"].isin(study_df["geo_accession"]),
-        ["geo_accession"],
-    ].copy()
-    dropped_study_df.insert(0, "level", "study")
-    dropped_study_df["experiment_alias"] = None
-    dropped_study_df["study_name"] = dropped_study_df["geo_accession"]
-    dropped_study_df["corrected_type"] = None
-    dropped_study_df["drop_reason"] = "all experiments dropped"
-    dropped_study_df = dropped_study_df[
-        ["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"]
-    ]
+    dropped_experiment_df = pd.DataFrame(columns=["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"])
+    dropped_study_df = pd.DataFrame(columns=["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"])
 
-    kept_aliases = set(experiment_kept_df["experiment_alias"])
-    srr_source_df = metadata_df[metadata_df["experiment_alias"].isin(kept_aliases)].copy()
+    kept_keys = set(zip(experiment_kept_df["study_name"], experiment_kept_df["experiment_alias"]))
+    srr_source_df = metadata_df[
+        metadata_df.apply(lambda row: (row["study_name"], row["experiment_alias"]) in kept_keys, axis=1)
+    ].copy()
     valid_run_mask = srr_source_df["run"].fillna("").astype(str).str.strip().ne("")
     skipped_run_rows = int((~valid_run_mask).sum())
+    skipped_run_issue_df = _build_issue_rows(
+        srr_source_df,
+        ~valid_run_mask,
+        level="source_row",
+        reason="missing run",
+    )
     srr_source_df = srr_source_df[valid_run_mask].copy()
-    srr_source_df["experiment_id"] = srr_source_df["experiment_alias"].map(alias_to_final_id).astype("Int64")
+    srr_source_df["experiment_id"] = srr_source_df.apply(
+        lambda row: alias_to_final_id.get((row["study_name"], row["experiment_alias"])),
+        axis=1,
+    ).astype("Int64")
     srr_source_df = srr_source_df.rename(columns={"run": "sra_accession"})
     srr_df = (
         srr_source_df[["sra_accession", "experiment_id"]]
@@ -332,24 +489,32 @@ def build_sqlite_inputs(metadata_df: pd.DataFrame, supported_organisms: list[str
             "id": experiment_kept_df["id"].astype(int),
             "study_id": experiment_kept_df["study_id"].astype(int),
             "matched_experiment_id": experiment_kept_df["matched_experiment_id"].astype("Int64"),
-            "experiment_alias": experiment_kept_df["experiment_alias"].astype(str),
-            "type": experiment_kept_df["corrected_type"].astype(str),
-            "organism": experiment_kept_df["organism"].astype(str),
+            "experiment_alias": experiment_kept_df["experiment_alias"],
+            "type": experiment_kept_df["corrected_type"],
+            "organism": experiment_kept_df["organism"],
             "threep_adapter": experiment_kept_df["threep_adapter"].where(
                 experiment_kept_df["threep_adapter"].notna(), ""
             ),
         }
     )
 
-    drop_log_df = pd.concat(
-        [
-            dropped_experiment_df[
-                ["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"]
-            ],
-            dropped_study_df,
+    issue_frames = [
+        source_issue_df,
+        duplicate_issue_df,
+        dropped_experiment_df[
+            ["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"]
         ],
-        ignore_index=True,
-    )
+        pd.DataFrame(matched_warning_rows),
+        skipped_run_issue_df,
+        dropped_study_df,
+    ]
+    issue_frames = [frame for frame in issue_frames if not frame.empty]
+    if issue_frames:
+        drop_log_df = pd.concat(issue_frames, ignore_index=True).drop_duplicates().reset_index(drop=True)
+    else:
+        drop_log_df = pd.DataFrame(
+            columns=["level", "experiment_alias", "study_name", "corrected_type", "drop_reason"]
+        )
 
     smoke_candidate = select_smoke_candidate(experiment_kept_df, srr_df, supported_organisms)
 
@@ -447,6 +612,9 @@ def write_sqlite(output_db: Path, study_df: pd.DataFrame, experiment_df: pd.Data
 
 
 def build_summary(artifacts: BuildArtifacts) -> dict[str, Any]:
+    warning_count = int(
+        artifacts.drop_log_df["drop_reason"].fillna("").str.contains("set NULL|conflicting duplicate", regex=True).sum()
+    )
     summary = {
         "supported_organisms": artifacts.supported_organisms,
         "organism_audit": artifacts.organism_audit_df.to_dict(orient="records"),
@@ -458,6 +626,8 @@ def build_summary(artifacts: BuildArtifacts) -> dict[str, Any]:
             "dropped_experiment": int(len(artifacts.dropped_experiment_df)),
             "dropped_study": int(len(artifacts.dropped_study_df)),
             "skipped_run_rows": int(artifacts.skipped_run_rows),
+            "issue_rows": int(len(artifacts.drop_log_df)),
+            "warning_rows": warning_count,
             "blocked_study_rows": int(len(artifacts.blocked_study_df)),
             "blocked_study_count": int(artifacts.blocked_study_df["study_name"].nunique()),
         },
@@ -512,6 +682,11 @@ def main() -> None:
                 **candidate
             )
         )
+    print(
+        "     issue_rows={issue_rows}, warning_rows={warning_rows}".format(
+            **summary["counts"]
+        )
+    )
 
 
 if __name__ == "__main__":

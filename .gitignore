@@ -227,3 +227,39 @@ cython_debug/
 # IDE
 .vscode/
 .idea/
+
+# Project-specific runtime and intermediate data
+/db/
+/docs/p5_postmortem/
+/docs/chatgpt_handoff_*.md
+/docs/p5_study_inventory.tsv
+
+# Generated batch scripts (keep hand-written ones)
+/scripts/run_p5_batch.sh
+/scripts/build_sqlite_from_metadata_now.py
+/scripts/prepare_rna_stub.py
+/scripts/probe_adapter_hitrate.py
+/scripts/stage_fastq.py
+
+# Vendor submodule runtime outputs
+/vendor/snakescale/.nextflow/
+/vendor/snakescale/.snakemake/
+/vendor/snakescale/work/
+/vendor/snakescale/log/
+/vendor/snakescale/nextflow_logs/
+/vendor/snakescale/output/
+/vendor/snakescale/intermediates/
+/vendor/snakescale/input/
+/vendor/snakescale/reference/
+/vendor/snakescale/staged_fastq/
+/vendor/snakescale/adapter_check_output/
+/vendor/snakescale/modifications/
+/vendor/snakescale/db/
+/vendor/snakescale/scripts/__pycache__/
+/vendor/snakescale/*.log
+/vendor/snakescale/*_length.yaml
+/vendor/snakescale/yaml_status.txt
+
+/vendor/TE_model/data/ribo/
+/vendor/TE_model/src/__pycache__/
+/vendor/TE_model/trials/
