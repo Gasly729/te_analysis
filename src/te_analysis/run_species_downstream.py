@@ -1,6 +1,7 @@
 """Thin Stage 2/3 bridge from species prepare output to shared vendor/TE_model."""
 from __future__ import annotations
 
+import ast
 import argparse
 import json
 import subprocess
@@ -8,13 +9,17 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
+
 from te_analysis.config import REPO_ROOT
 
 VENDOR_TE_MODEL = REPO_ROOT / "vendor" / "TE_model"
+METADATA_DEFAULT = REPO_ROOT / "data" / "raw" / "metadata.csv"
 STAGE1_PRODUCTS = ("ribo_paired_count_dummy.csv", "rna_paired_count_dummy.csv")
 STAGE2_PRODUCTS = ("human_TE_sample_level.rda", "human_TE_cellline_all.csv")
 STAGE3_PRODUCT = "human_TE_cellline_all_T.csv"
 SERIAL_PATCH_TARGET = "TE.serial.patched"
+INFOR_FILTER_NAME = "infor_filter.csv"
 
 
 def _timestamp() -> str:
@@ -64,6 +69,145 @@ def _require_nonempty(path: Path, label: str) -> None:
 def _validate_stage1_products(trial_dir: Path) -> None:
     for name in STAGE1_PRODUCTS:
         _require_nonempty(trial_dir / name, f"Stage 1 product {name}")
+
+
+def _load_metadata(metadata_path: Path) -> pd.DataFrame:
+    if not metadata_path.is_file():
+        raise FileNotFoundError(f"metadata.csv not found: {metadata_path}")
+    return pd.read_csv(metadata_path, header=1, dtype=str, keep_default_na=False)
+
+
+def _load_vendor_infor_filter(vendor_root: Path) -> pd.DataFrame:
+    source_path = vendor_root / "data" / INFOR_FILTER_NAME
+    if not source_path.is_file():
+        raise FileNotFoundError(f"shared vendor infor_filter.csv not found: {source_path}")
+    df = pd.read_csv(source_path, dtype=str, keep_default_na=False)
+    required = {"experiment_alias", "cell_line"}
+    missing = required - set(df.columns)
+    if missing:
+        raise KeyError(f"shared vendor infor_filter.csv missing required columns: {sorted(missing)}")
+    return df
+
+
+def _extract_custom_experiment_list(config_path: Path) -> list[str]:
+    if not config_path.is_file():
+        raise FileNotFoundError(f"trial config not found: {config_path}")
+    module = ast.parse(config_path.read_text(encoding="utf-8"), filename=str(config_path))
+    for node in ast.walk(module):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not isinstance(func, ast.Name) or func.id != "main":
+            continue
+        for keyword in node.keywords:
+            if keyword.arg != "custom_experiment_list":
+                continue
+            value = ast.literal_eval(keyword.value)
+            if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+                raise ValueError(f"custom_experiment_list must be a list[str] in {config_path}")
+            if not value:
+                raise ValueError(f"custom_experiment_list is empty in {config_path}")
+            return value
+    raise ValueError(f"custom_experiment_list not found in {config_path}")
+
+
+def _build_runtime_infor_filter_rows(
+    *,
+    metadata: pd.DataFrame,
+    experiments: list[str],
+    study_names: list[str] | None = None,
+) -> pd.DataFrame:
+    required = {"experiment_alias", "cell_line"}
+    missing = required - set(metadata.columns)
+    if missing:
+        raise KeyError(f"metadata.csv missing required columns for infor_filter bridge: {sorted(missing)}")
+
+    scoped = metadata[metadata["experiment_alias"].isin(experiments)].copy()
+    if study_names:
+        if "study_name" not in scoped.columns:
+            raise KeyError("metadata.csv missing study_name; cannot scope bounded smoke studies")
+        scoped = scoped[scoped["study_name"].isin(study_names)].copy()
+
+    rows: list[dict[str, str]] = []
+    missing_experiments: list[str] = []
+    for experiment_alias in experiments:
+        grp = scoped[scoped["experiment_alias"] == experiment_alias].copy()
+        if grp.empty:
+            missing_experiments.append(experiment_alias)
+            continue
+        values = sorted({value for value in grp["cell_line"] if value})
+        if len(values) > 1:
+            raise ValueError(
+                f"metadata conflict for experiment_alias={experiment_alias!r} cell_line={values}"
+            )
+        rows.append(
+            {
+                "experiment_alias": experiment_alias,
+                "cell_line": values[0] if values else "",
+            }
+        )
+
+    if missing_experiments:
+        raise ValueError(
+            "metadata.csv missing experiment_alias rows for runtime-local infor_filter bridge: "
+            f"{missing_experiments}"
+        )
+
+    return pd.DataFrame(rows)
+
+
+def _materialize_runtime_infor_filter(
+    *,
+    species_root: Path,
+    runtime_root: Path,
+    trial_dir: Path,
+    vendor_root: Path,
+    metadata_path: Path,
+    stamp: str,
+    bounded_studies: list[str] | None = None,
+) -> tuple[Path, Path]:
+    base = _load_vendor_infor_filter(vendor_root)
+    metadata = _load_metadata(metadata_path)
+    experiments = _extract_custom_experiment_list(trial_dir / "config.py")
+    bridge_rows = _build_runtime_infor_filter_rows(
+        metadata=metadata,
+        experiments=experiments,
+        study_names=bounded_studies,
+    )
+
+    runtime_data_dir = runtime_root / "data"
+    runtime_data_dir.mkdir(parents=True, exist_ok=True)
+    runtime_path = runtime_data_dir / INFOR_FILTER_NAME
+
+    bridge_experiments = set(bridge_rows["experiment_alias"])
+    merged = pd.concat(
+        [base[~base["experiment_alias"].isin(bridge_experiments)].copy(), bridge_rows],
+        ignore_index=True,
+    )
+    if "Unnamed: 0" in merged.columns:
+        merged["Unnamed: 0"] = [str(i) for i in range(1, len(merged) + 1)]
+    merged.to_csv(runtime_path, index=False)
+
+    patch_log = species_root / "logs" / f"infor_filter.bridge.{stamp}.log"
+    patch_log.parent.mkdir(parents=True, exist_ok=True)
+    patch_log.write_text(
+        json.dumps(
+            {
+                "shared_infor_filter": str(vendor_root / "data" / INFOR_FILTER_NAME),
+                "runtime_infor_filter": str(runtime_path),
+                "metadata_path": str(metadata_path),
+                "trial_config": str(trial_dir / "config.py"),
+                "bounded_studies": bounded_studies or [],
+                "experiments_requested": experiments,
+                "bridge_rows_added": bridge_rows.to_dict("records"),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return runtime_path, patch_log
 
 
 def _build_serial_te_r(source_text: str) -> tuple[str, dict[str, int]]:
@@ -152,9 +296,13 @@ def build_parser() -> argparse.ArgumentParser:
     root_group.add_argument("--runtime-root", type=Path)
     ap.add_argument("--trial", "--trial-name", dest="trial_name", default=None)
     ap.add_argument("--vendor-root", type=Path, default=VENDOR_TE_MODEL)
+    ap.add_argument("--metadata", type=Path, default=METADATA_DEFAULT)
     ap.add_argument("--rscript-bin", default="Rscript")
     ap.add_argument("--python-bin", default=sys.executable)
     ap.add_argument("--stage2-mode", choices=("shared", "serial-fallback"), default="shared")
+    ap.add_argument("--infor-filter-mode", choices=("shared", "runtime-local"), default="shared")
+    ap.add_argument("--bounded-study", dest="bounded_studies", action="append", default=[])
+    ap.add_argument("--materialize-infor-filter-only", action="store_true")
     ap.add_argument("--skip-stage3", action="store_true")
     return ap
 
@@ -165,6 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     vendor_root = args.vendor_root if args.vendor_root.is_absolute() else (REPO_ROOT / args.vendor_root)
     if not vendor_root.is_dir():
         raise FileNotFoundError(f"vendor root not found: {vendor_root}")
+    metadata_path = args.metadata if args.metadata.is_absolute() else (REPO_ROOT / args.metadata)
 
     if args.runtime_root is not None:
         runtime_root = args.runtime_root if args.runtime_root.is_absolute() else (REPO_ROOT / args.runtime_root)
@@ -198,8 +347,27 @@ def main(argv: list[str] | None = None) -> int:
     stage3_log = logs_dir / f"{run_id}.stage3.{args.stage2_mode}.{stamp}.log"
 
     trial_arg = str(trial_dir.resolve())
-    stage2_entry = "src/TE.R"
+    stage2_entry = str((vendor_root / "src" / "TE.R").resolve())
+    stage2_cwd = vendor_root
+    bridge_log: Path | None = None
     patch_log: Path | None = None
+    if args.infor_filter_mode == "runtime-local":
+        runtime_infor_filter, bridge_log = _materialize_runtime_infor_filter(
+            species_root=species_root,
+            runtime_root=runtime_root,
+            trial_dir=trial_dir,
+            vendor_root=vendor_root,
+            metadata_path=metadata_path,
+            stamp=stamp,
+            bounded_studies=args.bounded_studies,
+        )
+        stage2_cwd = runtime_root
+        print(f"[run_species_downstream] runtime-local infor_filter={runtime_infor_filter}")
+        print(f"[run_species_downstream] infor_filter bridge log={bridge_log}")
+    if args.materialize_infor_filter_only:
+        if args.infor_filter_mode != "runtime-local":
+            raise ValueError("--materialize-infor-filter-only requires --infor-filter-mode runtime-local")
+        return 0
     if args.stage2_mode == "serial-fallback":
         patched_te_r, patch_log = _materialize_serial_te_r(
             species_root=species_root,
@@ -210,9 +378,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[run_species_downstream] serial patch log={patch_log}")
         print(f"[run_species_downstream] serial patched TE.R={patched_te_r}")
     stage2_cmd = [args.rscript_bin, stage2_entry, trial_arg]
-    print(f"[run_species_downstream] stage2 cwd={vendor_root}")
+    print(f"[run_species_downstream] stage2 cwd={stage2_cwd}")
     print(f"[run_species_downstream] {' '.join(stage2_cmd)}")
-    stage2_rc = _run_logged(stage2_cmd, cwd=vendor_root, log_path=stage2_log)
+    stage2_rc = _run_logged(stage2_cmd, cwd=stage2_cwd, log_path=stage2_log)
 
     stage2_ready = True
     for name in STAGE2_PRODUCTS:
@@ -232,7 +400,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.skip_stage3:
         return 0
 
-    stage3_cmd = [args.python_bin, "src/transpose_TE.py", "-o", trial_arg]
+    stage3_cmd = [args.python_bin, str((vendor_root / "src" / "transpose_TE.py").resolve()), "-o", trial_arg]
     print(f"[run_species_downstream] stage3 cwd={vendor_root}")
     print(f"[run_species_downstream] {' '.join(stage3_cmd)}")
     stage3_rc = _run_logged(stage3_cmd, cwd=vendor_root, log_path=stage3_log)
