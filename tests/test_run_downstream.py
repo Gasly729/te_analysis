@@ -2,7 +2,7 @@
 
 DoD §4.4 numerical alignment is downscoped (T9 + T14 scope); this file
 validates command structure + config.py generation + product rename.
-All subprocess.run calls are mocked; no real TE.R / pipeline.bash execution.
+All subprocess.run calls are mocked; no real TE.R execution.
 """
 from __future__ import annotations
 
@@ -57,21 +57,25 @@ def test_copy_products_renames_human_prefix(tmp_path: Path) -> None:
     trial_dir = tmp_path / "trial"
     trial_dir.mkdir()
     for name in PRODUCTS:
-        (trial_dir / name).write_bytes(b"stub")
+        if name.endswith(".csv"):
+            (trial_dir / name).write_text(",GSM1\nGENE1,1\n")
+        else:
+            (trial_dir / name).write_bytes(b"stub")
     out_dir = tmp_path / "out"
-    n = _copy_products(trial_dir, out_dir, "Arabidopsis thaliana")
-    assert n == 3
+    n = _copy_products(trial_dir, out_dir, "Arabidopsis thaliana", "GSE132441")
+    assert n == 4
     assert (out_dir / "arabidopsis_thaliana_TE_cellline_all.csv").is_file()
     assert (out_dir / "arabidopsis_thaliana_TE_cellline_all_T.csv").is_file()
     assert (out_dir / "arabidopsis_thaliana_TE_sample_level.rda").is_file()
+    assert (out_dir / "GSE132441_TE.csv").is_file()
 
 
 def test_copy_products_skips_missing(tmp_path: Path) -> None:
     trial_dir = tmp_path / "trial"
     trial_dir.mkdir()
-    (trial_dir / PRODUCTS[0]).write_bytes(b"stub")
-    n = _copy_products(trial_dir, tmp_path / "out", "Homo sapiens")
-    assert n == 1
+    (trial_dir / PRODUCTS[0]).write_text(",GSM1\nGENE1,1\n")
+    n = _copy_products(trial_dir, tmp_path / "out", "Homo sapiens", "GSE132441")
+    assert n == 2
 
 
 def test_missing_study_dir_raises(tmp_path: Path) -> None:
@@ -88,12 +92,21 @@ def test_main_end_to_end_mocked(tmp_path: Path) -> None:
     trial_dir = TE_MODEL_TRIALS / "GSE132441"
 
     def fake_run(cmd, cwd, check, **_):
-        assert cmd == ["bash", "pipeline.bash", "-t", "GSE132441"]
         assert cwd == VENDOR_TE_MODEL
         assert check is False
-        # Simulate TE.R products produced under trials/<study>/
-        for name in PRODUCTS:
-            (trial_dir / name).write_bytes(b"stub")
+        if cmd[1:3] == ["-m", "trials.GSE132441.config"]:
+            (trial_dir / "ribo_raw.csv").write_text(",GSM1\nGENE1,1\n")
+            (trial_dir / "rnaseq_raw.csv").write_text(",GSM1\nGENE1,1\n")
+        elif cmd[1] == "src/ribobase_counts_processing.py":
+            (trial_dir / "ribo_paired_count_dummy.csv").write_text(",GSM1\nGENE1,1\n")
+            (trial_dir / "rna_paired_count_dummy.csv").write_text(",GSM1\nGENE1,1\n")
+        elif cmd[0] == "Rscript":
+            (trial_dir / "human_TE_cellline_all.csv").write_text(",GENE1\nHeLa,1\n")
+            (trial_dir / "human_TE_sample_level.rda").write_bytes(b"stub")
+        elif cmd[1] == "src/transpose_TE.py":
+            (trial_dir / "human_TE_cellline_all_T.csv").write_text(",HeLa\nGENE1,1\n")
+        else:
+            raise AssertionError(cmd)
         return MagicMock(returncode=0)
 
     try:
@@ -101,11 +114,20 @@ def test_main_end_to_end_mocked(tmp_path: Path) -> None:
             rc = main(["--study-dir", str(study_dir), "--out-dir", str(out_dir)])
         assert rc == 0
         assert (out_dir / "arabidopsis_thaliana_TE_cellline_all_T.csv").is_file()
+        assert (out_dir / "GSE132441_TE.csv").is_file()
         assert (trial_dir / "config.py").is_file()
     finally:
         # Clean up vendor trials artifact so vendor stays pristine between runs
         if trial_dir.exists():
-            for name in ("__init__.py", "config.py", *PRODUCTS):
+            for name in (
+                "__init__.py",
+                "config.py",
+                "ribo_raw.csv",
+                "rnaseq_raw.csv",
+                "ribo_paired_count_dummy.csv",
+                "rna_paired_count_dummy.csv",
+                *PRODUCTS,
+            ):
                 f = trial_dir / name
                 if f.is_file():
                     f.unlink()

@@ -1,9 +1,9 @@
-"""Thin wrapper over vendor/TE_model/pipeline.bash (module_contracts §M3).
+"""Thin wrapper over vendor/TE_model stages (module_contracts §M3).
 
 Full contract: docs/te_model_contract.md §5 and plan L2.
 - Stage 0 via generated trials/{study}/config.py calling main()
   with custom_experiment_list (bypasses paxdb_filtered_sample.csv).
-- Stage 1-3 via `bash pipeline.bash -t {study}` (cwd=vendor/TE_model).
+- Stage 1-3 via explicit vendor stage entry points (cwd=vendor/TE_model).
 - Product rename: human_* -> {organism}_* into <out-dir>/.
 
 CLI: python -m te_analysis.run_downstream --study-dir PATH --out-dir PATH
@@ -14,6 +14,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -24,8 +25,12 @@ from te_analysis.config import REPO_ROOT
 VENDOR_TE_MODEL = REPO_ROOT / "vendor" / "TE_model"
 TE_MODEL_TRIALS = VENDOR_TE_MODEL / "trials"
 METADATA_DEFAULT = REPO_ROOT / "data" / "raw" / "metadata.csv"
-PRODUCTS = ("human_TE_cellline_all.csv", "human_TE_cellline_all_T.csv",
-            "human_TE_sample_level.rda")
+STAGE0_PRODUCTS = ("ribo_raw.csv", "rnaseq_raw.csv")
+STAGE1_PRODUCTS = ("ribo_paired_count_dummy.csv", "rna_paired_count_dummy.csv")
+STAGE2_PRODUCTS = ("human_TE_cellline_all.csv", "human_TE_sample_level.rda")
+STAGE3_PRODUCT = "human_TE_cellline_all_T.csv"
+PRODUCTS = ("human_TE_cellline_all.csv", "human_TE_cellline_all_T.csv", "human_TE_sample_level.rda")
+SERIAL_PATCH_TARGET = "TE.serial.patched"
 
 
 def _load(metadata: Path, study: str) -> tuple[list[str], str]:
@@ -54,7 +59,101 @@ def _write_trial(trial_dir: Path, experiments: list[str]) -> None:
     '''))
 
 
-def _copy_products(trial_dir: Path, out_dir: Path, organism: str) -> int:
+def _timestamp() -> str:
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def _require_nonempty(path: Path, label: str) -> None:
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} missing: {path}")
+    if path.stat().st_size == 0:
+        raise ValueError(f"{label} is empty: {path}")
+
+
+def _require_nonempty_csv(path: Path, label: str) -> pd.DataFrame:
+    _require_nonempty(path, label)
+    df = pd.read_csv(path, index_col=0)
+    if df.empty:
+        raise ValueError(f"{label} has no data rows: {path}")
+    return df
+
+
+def _validate_products(trial_dir: Path, names: tuple[str, ...], label: str) -> None:
+    for name in names:
+        _require_nonempty(trial_dir / name, f"{label} product {name}")
+
+
+def _raw_experiment_count(path: Path) -> int:
+    _require_nonempty(path, f"Stage 0 product {path.name}")
+    return max(len(pd.read_csv(path, nrows=0).columns) - 1, 0)
+
+
+def _build_serial_te_r(source_text: str) -> tuple[str, dict[str, int]]:
+    replacements = {
+        "library_doParallel_removed": 0,
+        "makeCluster_removed": 0,
+        "registerDoParallel_removed": 0,
+        "dopar_replaced": 0,
+        "stopCluster_removed": 0,
+    }
+    patched_lines: list[str] = []
+    for line in source_text.splitlines(keepends=True):
+        stripped = line.strip()
+        if stripped == "library(doParallel)":
+            replacements["library_doParallel_removed"] += 1
+            continue
+        if "makeCluster(" in stripped:
+            replacements["makeCluster_removed"] += 1
+            continue
+        if "registerDoParallel(" in stripped:
+            replacements["registerDoParallel_removed"] += 1
+            continue
+        if "stopCluster(" in stripped:
+            replacements["stopCluster_removed"] += 1
+            continue
+        if "%dopar%" in line:
+            line = line.replace("%dopar%", "%do%")
+            replacements["dopar_replaced"] += 1
+        patched_lines.append(line)
+
+    if replacements["dopar_replaced"] == 0:
+        raise ValueError("serial TE.R patch failed: no %dopar% token found")
+    return "".join(patched_lines), replacements
+
+
+def _materialize_serial_te_r(out_dir: Path, vendor_root: Path, stamp: str) -> Path:
+    source_path = vendor_root / "src" / "TE.R"
+    if not source_path.is_file():
+        raise FileNotFoundError(f"shared vendor TE.R not found: {source_path}")
+
+    patched_text, replacements = _build_serial_te_r(source_path.read_text(encoding="utf-8"))
+    runtime_overrides = out_dir / "runtime_overrides"
+    runtime_overrides.mkdir(parents=True, exist_ok=True)
+    patched_path = runtime_overrides / f"{SERIAL_PATCH_TARGET}.{stamp}.R"
+    patched_path.write_text(patched_text, encoding="utf-8")
+
+    patch_log = out_dir / "logs" / f"TE.serial.patch.{stamp}.log"
+    patch_log.parent.mkdir(parents=True, exist_ok=True)
+    patch_log.write_text(
+        "\n".join(
+            [
+                f"source_te_r={source_path}",
+                f"patched_te_r={patched_path}",
+                f"replacements={replacements}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return patched_path
+
+
+def _run(command: list[str], *, cwd: Path) -> int:
+    print(f"[run_downstream] {' '.join(command)}  (cwd={cwd})")
+    return subprocess.run(command, cwd=cwd, check=False).returncode
+
+
+def _copy_products(trial_dir: Path, out_dir: Path, organism: str, study: str) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     org = organism.strip().lower().replace(" ", "_")
     n = 0
@@ -63,6 +162,11 @@ def _copy_products(trial_dir: Path, out_dir: Path, organism: str) -> int:
         if src.is_file():
             shutil.copy2(src, out_dir / name.replace("human_", f"{org}_"))
             n += 1
+    canonical = out_dir / f"{study}_TE.csv"
+    canonical_df = _require_nonempty_csv(trial_dir / "human_TE_cellline_all.csv", "canonical TE CSV")
+    canonical_df.to_csv(canonical)
+    _require_nonempty_csv(canonical, "canonical copied TE CSV")
+    n += 1
     return n
 
 
@@ -71,6 +175,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--study-dir", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--metadata", type=Path, default=METADATA_DEFAULT)
+    ap.add_argument("--python-bin", default=sys.executable)
+    ap.add_argument("--rscript-bin", default="Rscript")
+    ap.add_argument("--stage2-mode", choices=("shared", "serial-fallback"), default="shared")
+    ap.add_argument("--no-cutoff", action="store_true")
     args = ap.parse_args(argv)
     if not args.study_dir.is_dir():
         raise FileNotFoundError(f"--study-dir not a directory: {args.study_dir}")
@@ -79,12 +187,57 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[run_downstream] {study} organism={organism} N={len(experiments)}")
     trial_dir = TE_MODEL_TRIALS / study
     _write_trial(trial_dir, experiments)
-    cmd = ["bash", "pipeline.bash", "-t", study]
-    print(f"[run_downstream] {' '.join(cmd)}  (cwd={VENDOR_TE_MODEL})")
-    rc = subprocess.run(cmd, cwd=VENDOR_TE_MODEL, check=False).returncode
+
+    rc = _run([args.python_bin, "-m", f"trials.{study}.config"], cwd=VENDOR_TE_MODEL)
     if rc != 0:
         return rc
-    n = _copy_products(trial_dir, args.out_dir, organism)
+    _validate_products(trial_dir, STAGE0_PRODUCTS, "Stage 0")
+    print(
+        "[run_downstream] Stage 0 raw experiment counts "
+        f"ribo={_raw_experiment_count(trial_dir / 'ribo_raw.csv')} "
+        f"rna={_raw_experiment_count(trial_dir / 'rnaseq_raw.csv')}"
+    )
+
+    stage1_cmd = [
+        args.python_bin,
+        "src/ribobase_counts_processing.py",
+        "-i",
+        f"trials/{study}/ribo_raw.csv",
+        "-r",
+        f"trials/{study}/rnaseq_raw.csv",
+        "-m",
+        "paired",
+        "-o",
+        f"trials/{study}",
+    ]
+    if args.no_cutoff:
+        stage1_cmd.extend(["--cpm_cut_off", "0", "--overall_cut_off", "0"])
+    rc = _run(stage1_cmd, cwd=VENDOR_TE_MODEL)
+    if rc != 0:
+        return rc
+    _validate_products(trial_dir, STAGE1_PRODUCTS, "Stage 1")
+
+    out_dir = args.out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stage2_entry = VENDOR_TE_MODEL / "src" / "TE.R"
+    if args.stage2_mode == "serial-fallback":
+        stage2_entry = _materialize_serial_te_r(out_dir, VENDOR_TE_MODEL, _timestamp())
+        print(f"[run_downstream] serial patched TE.R={stage2_entry}")
+    rc = _run([args.rscript_bin, str(stage2_entry), str(trial_dir.resolve())], cwd=VENDOR_TE_MODEL)
+    if rc != 0:
+        return rc
+    _validate_products(trial_dir, STAGE2_PRODUCTS, "Stage 2")
+    _require_nonempty_csv(trial_dir / "human_TE_cellline_all.csv", "Stage 2 human_TE_cellline_all.csv")
+
+    rc = _run(
+        [args.python_bin, "src/transpose_TE.py", "-o", f"trials/{study}"],
+        cwd=VENDOR_TE_MODEL,
+    )
+    if rc != 0:
+        return rc
+    _validate_products(trial_dir, (STAGE3_PRODUCT,), "Stage 3")
+
+    n = _copy_products(trial_dir, args.out_dir, organism, study)
     print(f"[run_downstream] copied {n} product file(s) -> {args.out_dir}")
     return 0
 

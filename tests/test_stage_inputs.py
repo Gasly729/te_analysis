@@ -49,6 +49,9 @@ def test_happy_path_gse132441(tmp_path: Path) -> None:
     doc = yaml.safe_load((out / "project.yaml").read_text())
     assert doc["do_rnaseq"] is True
     assert doc["deduplicate"] is False
+    assert doc["clip_arguments"] == (
+        "-u 1 -l 40 --minimum-length=15 --quality-cutoff=28"
+    )
     assert set(doc["input"]["fastq"].keys()) == {
         "GSM3863556", "GSM3863558", "GSM3863561"
     }

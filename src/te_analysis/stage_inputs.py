@@ -30,6 +30,11 @@ REFERENCE_FOLDER = "reference"  # prefix used inside snakescale runtime
 # Clip-argument base strings, vendored from generate_yaml.py:159,161
 RIBO_CLIP_BASE = "-u 1 --maximum-length=40 --minimum-length=15 --quality-cutoff=28"
 RNA_CLIP_BASE = "-u 5 -l 40 --quality-cutoff=28"
+STUDY_RIBO_CLIP_OVERRIDES = {
+    # GSE132441 has fixed 55 nt no-adapter Ribo reads; truncate to the
+    # configured RiboFlow max length instead of dropping nearly all reads.
+    "GSE132441": "-u 1 -l 40 --minimum-length=15 --quality-cutoff=28",
+}
 
 STAGED_DIR = "staged_fastq"
 DATA_RAW = REPO_ROOT / "data" / "raw"
@@ -187,7 +192,10 @@ def _build_project_yaml(
 
     # Ribo clip
     ribo_adapters = set(ribo["threep_adapter"])
-    doc["clip_arguments"] = _build_clip_arguments(RIBO_CLIP_BASE, ribo_adapters, is_ribo=True)
+    ribo_clip_base = STUDY_RIBO_CLIP_OVERRIDES.get(gse, RIBO_CLIP_BASE)
+    doc["clip_arguments"] = _build_clip_arguments(
+        ribo_clip_base, ribo_adapters, is_ribo=True
+    )
     # RNA clip (use only matched-to-Ribo RNA rows' adapters; empty adapter is fine)
     matched_rna_names = {
         a for a in ribo["matched_RNA-seq_experiment_alias"] if a
