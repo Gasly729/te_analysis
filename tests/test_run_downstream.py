@@ -14,9 +14,11 @@ import pytest
 from te_analysis.config import REPO_ROOT
 from te_analysis.run_downstream import (
     PRODUCTS,
+    TE_MODEL_RIBO_DATA,
     TE_MODEL_TRIALS,
     VENDOR_TE_MODEL,
     _copy_products,
+    _inject_ribo_input,
     _load,
     _write_trial,
     main,
@@ -53,6 +55,29 @@ def test_write_trial_creates_module_files(tmp_path: Path) -> None:
     assert "rna_seq_dedup=False" in config_text
 
 
+def test_write_trial_patches_alias_for_nonhuman(tmp_path: Path) -> None:
+    trial_dir = tmp_path / "trials" / "GSE132441"
+    _write_trial(trial_dir, ["GSM1"], organism="Arabidopsis thaliana")
+    config_text = (trial_dir / "config.py").read_text()
+    assert "ribopy.api.alias.apris_human_alias = _identity_alias" in config_text
+    compile(config_text, str(trial_dir / "config.py"), "exec")
+
+
+def test_inject_ribo_input_links_study_output(tmp_path: Path) -> None:
+    study_dir = tmp_path / "GSE132441"
+    (study_dir / "ribo").mkdir(parents=True)
+    (study_dir / "ribo" / "all.ribo").write_bytes(b"ribo")
+    expected_link = TE_MODEL_RIBO_DATA / "GSE132441"
+    try:
+        link = _inject_ribo_input(study_dir, "GSE132441")
+        assert link == expected_link
+        assert link.is_symlink()
+        assert link.resolve() == study_dir.resolve()
+    finally:
+        if expected_link.exists() or expected_link.is_symlink():
+            expected_link.unlink()
+
+
 def test_copy_products_renames_human_prefix(tmp_path: Path) -> None:
     trial_dir = tmp_path / "trial"
     trial_dir.mkdir()
@@ -86,10 +111,12 @@ def test_missing_study_dir_raises(tmp_path: Path) -> None:
 
 def test_main_end_to_end_mocked(tmp_path: Path) -> None:
     study_dir = tmp_path / "GSE132441"
-    study_dir.mkdir()
+    (study_dir / "ribo").mkdir(parents=True)
     (study_dir / "project.yaml").write_text("do_fastqc: true\n")
+    (study_dir / "ribo" / "all.ribo").write_bytes(b"ribo")
     out_dir = tmp_path / "out"
     trial_dir = TE_MODEL_TRIALS / "GSE132441"
+    ribo_link = TE_MODEL_RIBO_DATA / "GSE132441"
 
     def fake_run(cmd, cwd, check, **_):
         assert cwd == VENDOR_TE_MODEL
@@ -116,7 +143,10 @@ def test_main_end_to_end_mocked(tmp_path: Path) -> None:
         assert (out_dir / "arabidopsis_thaliana_TE_cellline_all_T.csv").is_file()
         assert (out_dir / "GSE132441_TE.csv").is_file()
         assert (trial_dir / "config.py").is_file()
+        assert ribo_link.is_symlink()
     finally:
+        if ribo_link.exists() or ribo_link.is_symlink():
+            ribo_link.unlink()
         # Clean up vendor trials artifact so vendor stays pristine between runs
         if trial_dir.exists():
             for name in (
@@ -139,14 +169,18 @@ def test_main_end_to_end_mocked(tmp_path: Path) -> None:
 
 def test_nonzero_subprocess_propagates(tmp_path: Path) -> None:
     study_dir = tmp_path / "GSE132441"
-    study_dir.mkdir()
+    (study_dir / "ribo").mkdir(parents=True)
+    (study_dir / "ribo" / "all.ribo").write_bytes(b"ribo")
     trial_dir = TE_MODEL_TRIALS / "GSE132441"
+    ribo_link = TE_MODEL_RIBO_DATA / "GSE132441"
     try:
         with patch("te_analysis.run_downstream.subprocess.run",
                    return_value=MagicMock(returncode=3)):
             assert main(["--study-dir", str(study_dir),
                          "--out-dir", str(tmp_path / "out")]) == 3
     finally:
+        if ribo_link.exists() or ribo_link.is_symlink():
+            ribo_link.unlink()
         if trial_dir.exists():
             for name in ("__init__.py", "config.py"):
                 f = trial_dir / name

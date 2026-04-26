@@ -1,5 +1,17 @@
 # te_analysis 模块职责合同（顶层设计的功能尺度补充）
 
+> ⚠️ **历史设计文档（2026-04-19 版本）**
+>
+> 本文档反映项目早期 MVP 设计意图，**不代表 2026-04-26 当前架构现状**。已知偏离：
+> - `vendor/snakescale/riboflow/RiboFlow.groovy` 已有 tracked diff，违反"vendor 零修改"
+> - 自写代码量已超过原 500 行总目标（`run_downstream.py` 单文件即远超 80 行上限）
+> - `metadata.csv` 已从 27 列扩展到 30 列（H2 pysradb 增量），与原"禁止衍生列"约束冲突
+> - 物种级聚合入口 / runtime alias patch 等模块已超出原 4 文件结构
+>
+> 当前事实源：`reports/project_alignment_2026-04-26.md` + 后续将建立的 `docs/STATUS.md`。
+> 本文档将在内容合并阶段被重写或归档，引用前请对照当前代码现状交叉验证。
+
+
 **适用文档**：本文件是 `te_analysis_top_level_design_v1.md` 的**功能边界细则**
 **尺度**：按模块/文件/目录，**不按时间**
 **核心约束**：MVP 原则 —— 复用 > 封装 > 自写。任何"自写"都必须通过本文件的合同约束
