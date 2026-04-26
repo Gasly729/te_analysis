@@ -1,3 +1,18 @@
 {
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "git.ignoredRepositories": [
+        "vendor/snakescale",
+        "vendor/TE_model",
+        "/home/xrx/my_project/te_analysis/vendor/snakescale",
+        "/home/xrx/my_project/te_analysis/vendor/TE_model"
+    ],
+    "git.autoRepositoryDetection": false,
+    "git.detectSubmodules": false,
+    "git.detectSubmodulesLimit": 0,
+    "git.repositoryScanIgnoredFolders": [
+        "node_modules",
+        "vendor"
+    ],
+    "git.repositoryScanMaxDepth": 0,
+    "git.scanRepositories": []
 }
